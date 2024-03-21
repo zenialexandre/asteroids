@@ -2,8 +2,11 @@
 name = "asteroids"
 version = "0.1.0"
 edition = "2021"
+authors = ["Alexandre Zeni"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bevy = "0.13.0"
+image = "0.25.0"
+winit = "0.29.15"

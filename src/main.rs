@@ -1,7 +1,10 @@
 use bevy::{
     prelude::*,
-    window::{EnabledButtons, WindowPosition},
+    window::{EnabledButtons, WindowPosition, PrimaryWindow},
+    winit::WinitWindows
 };
+use std::io::Cursor;
+use winit::window::Icon;
 
 fn main() {
     App::new()
@@ -19,7 +22,7 @@ fn main() {
                 ..default()
             })
         )
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (setup, set_game_window_icon))
         .run();
 }
 
@@ -31,25 +34,23 @@ fn setup(mut commands: Commands) {
     commands.spawn(camera_2d_bundle);
 }
 
-/*
-TODO
-fn set_window_icon(
+fn set_game_window_icon(
     windows: NonSend<WinitWindows>,
     primary_window_query: Query<Entity, With<PrimaryWindow>>
 ) {
     let primary_window_entity: Entity = primary_window_query.single();
-    let primary_window = windows.get_window(primary_window_entity).unwrap();
-
-    let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open("assets/icons/asteroids.png")
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
+    let Some(primary_window) = windows.get_window(primary_window_entity) else {
+        return;
     };
+    let icon_buffer = Cursor::new(include_bytes!(
+        "../assets/icons/asteroids_icon.png"
+    ));
 
-    let icon: Icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
-    primary_window.set_window_icon(Some(icon));
+    if let Ok(image) = image::load(icon_buffer, image::ImageFormat::Png) {
+        let icon_image = image.into_rgba8();
+        let (icon_width, icon_height) = icon_image.dimensions();
+        let icon_rgba: Vec<u8> = icon_image.into_raw();
+        let asteroids_game_icon: Icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+        primary_window.set_window_icon(Some(asteroids_game_icon));
+    };
 }
-*/
