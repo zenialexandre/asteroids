@@ -6,6 +6,12 @@ use bevy::{
 use std::io::Cursor;
 use winit::window::Icon;
 
+#[derive(Component)]
+struct HeroShip {
+    movement_speed: f32,
+    rotation_speed: f32,
+}
+
 fn main() {
     App::new()
         .add_plugins(
@@ -26,12 +32,24 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let camera_2d_bundle: Camera2dBundle = Camera2dBundle {
         camera: Camera { clear_color: ClearColorConfig::Custom(Color::BLACK), ..default() },
         ..default()
     };
     commands.spawn(camera_2d_bundle);
+
+    let hero_ship_handle = asset_server.load("textures/sprites/ships/asteroids_hero_ship.png");
+    commands.spawn((
+        SpriteBundle {
+            texture: hero_ship_handle,
+            ..default()
+        },
+        HeroShip {
+            movement_speed: 500.0,
+            rotation_speed: f32::to_radians(360.0),
+        },
+    ));
 }
 
 fn set_game_window_icon(
