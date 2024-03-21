@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    window::{EnabledButtons, WindowPosition, PrimaryWindow},
+    window::{EnabledButtons, PrimaryWindow, WindowPosition},
     winit::WinitWindows
 };
 use std::io::Cursor;
@@ -29,24 +29,33 @@ fn main() {
             })
         )
         .add_systems(Startup, (setup, set_game_window_icon))
+        .add_systems(FixedUpdate, set_hero_ship_movement)
         .run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    set_game_camera(commands.reborrow());
+    set_game_hero_ship(commands, asset_server)
+}
+
+fn set_game_camera(mut commands: Commands) {
     let camera_2d_bundle: Camera2dBundle = Camera2dBundle {
         camera: Camera { clear_color: ClearColorConfig::Custom(Color::BLACK), ..default() },
         ..default()
     };
     commands.spawn(camera_2d_bundle);
+}
 
-    let hero_ship_handle = asset_server.load("textures/sprites/ships/asteroids_hero_ship.png");
+fn set_game_hero_ship(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let hero_ship_handle: Handle<Image> =
+        asset_server.load("textures/sprites/ships/asteroids_hero_ship.png");
     commands.spawn((
         SpriteBundle {
             texture: hero_ship_handle,
             ..default()
         },
         HeroShip {
-            movement_speed: 500.0,
+            movement_speed: 400.0,
             rotation_speed: f32::to_radians(360.0),
         },
     ));
@@ -71,4 +80,44 @@ fn set_game_window_icon(
         let asteroids_game_icon: Icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
         primary_window.set_window_icon(Some(asteroids_game_icon));
     };
+}
+
+fn set_hero_ship_movement(
+    time: Res<Time>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut query: Query<(&HeroShip, &mut Transform)>,
+) {
+    let (hero_ship, mut transform) = query.single_mut();
+    let mut rotation_factor: f32 = 0.0;
+    let mut movement_factor: f32 = 0.0;
+
+    if
+        keyboard_input.pressed(KeyCode::ArrowLeft) ||
+        keyboard_input.pressed(KeyCode::KeyA)
+    {
+        rotation_factor += 1.0;
+    }
+
+    if 
+        keyboard_input.pressed(KeyCode::ArrowRight) ||
+        keyboard_input.pressed(KeyCode::KeyD)
+    {
+        rotation_factor -= 1.0;
+    }
+
+    if 
+        keyboard_input.pressed(KeyCode::ArrowUp) ||
+        keyboard_input.pressed(KeyCode::KeyW)
+    {
+        movement_factor += 1.0;
+    }
+
+    transform.rotate_z(
+        rotation_factor * hero_ship.rotation_speed * time.delta_seconds()
+    );
+
+    let movement_direction: Vec3 = transform.rotation * Vec3::Y;
+    let movement_distance: f32 = movement_factor * hero_ship.movement_speed * time.delta_seconds();
+    let translation_delta: Vec3 = movement_direction * movement_distance;
+    transform.translation += translation_delta;
 }
