@@ -1,5 +1,7 @@
 use bevy::{
-    prelude::*, transform, window::{EnabledButtons, PrimaryWindow, WindowPosition}, winit::WinitWindows
+    prelude::*,
+    window::{EnabledButtons, PrimaryWindow, WindowPosition},
+    winit::WinitWindows,
 };
 use std::io::Cursor;
 use winit::window::Icon;
@@ -9,6 +11,11 @@ struct HeroShip {
     movement_speed: f32,
     rotation_speed: f32,
 }
+
+const BOTTOM_BORDER_POSITION: f32 = -260.0;
+const TOP_BORDER_POSITION: f32 = 260.0;
+const LEFT_BORDER_POSITION: f32 = -400.0;
+const RIGHT_BORDER_POSITION: f32 = 400.0;
 
 fn main() {
     App::new()
@@ -27,13 +34,16 @@ fn main() {
             })
         )
         .add_systems(Startup, (setup, set_game_window_icon))
-        .add_systems(FixedUpdate, (set_hero_ship_movement, set_new_hero_position_after_border_collision))
+        .add_systems(FixedUpdate, (
+            set_hero_ship_movement,
+            set_hero_ship_position_after_border_outbounds
+        ))
         .run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     set_game_camera(commands.reborrow());
-    set_game_hero_ship(commands, asset_server)
+    set_game_hero_ship(commands.reborrow(), asset_server);
 }
 
 fn set_game_camera(mut commands: Commands) {
@@ -83,7 +93,7 @@ fn set_game_window_icon(
 fn set_hero_ship_movement(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&HeroShip, &mut Transform)>,
+    mut query: Query<(&HeroShip, &mut Transform)>
 ) {
     let (hero_ship, mut hero_ship_transform) = query.single_mut();
     let mut rotation_factor: f32 = 0.0;
@@ -120,25 +130,22 @@ fn set_hero_ship_movement(
     hero_ship_transform.translation += translation_delta;
 }
 
-/*
-TODO: Gonna need to set Sprite Bundles for the borders
-fn set_new_hero_position_after_border_collision(
-    time: Res<Time>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    hero_ship_query: Query<(&HeroShip, &mut Transform)>
+fn set_hero_ship_position_after_border_outbounds(
+    mut hero_ship_query: Query<(&HeroShip, &mut Transform)>
 ) {
-    let primary_window_entity: &Window = window_query.single();
-    let primary_window_width: u16 = primary_window_entity.width() as u16;
-    let primary_window_height: u16 = primary_window_entity.height() as u16;
+    let (_, mut hero_ship_transform) = hero_ship_query.single_mut();
+    let hero_ship_position_x: f32 = hero_ship_transform.translation.x;
+    let hero_ship_position_y: f32 = hero_ship_transform.translation.y;
 
-    println!("Window W: {}", primary_window_width);
-    println!("Window H: {}", primary_window_height);
+    if hero_ship_position_x >= RIGHT_BORDER_POSITION {
+        hero_ship_transform.translation.x = LEFT_BORDER_POSITION;
+    } else if hero_ship_position_x <= LEFT_BORDER_POSITION {
+        hero_ship_transform.translation.x = RIGHT_BORDER_POSITION;
+    }
 
-    let (_, hero_ship_transform) = hero_ship_query.single();
-    let hero_ship_x_position: u16 = hero_ship_transform.translation.x as u16;
-    let hero_ship_y_position: u16 = hero_ship_transform.translation.y as u16;
-
-    println!("Hero Ship X: {}", hero_ship_x_position);
-    println!("Hero Ship Y: {}", hero_ship_y_position);
+    if hero_ship_position_y >= TOP_BORDER_POSITION {
+        hero_ship_transform.translation.y = BOTTOM_BORDER_POSITION;
+    } else if hero_ship_position_y <= BOTTOM_BORDER_POSITION {
+        hero_ship_transform.translation.y = TOP_BORDER_POSITION;
+    }
 }
-*/
