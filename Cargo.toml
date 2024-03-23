@@ -8,5 +8,7 @@ authors = ["Alexandre Zeni"]
 
 [dependencies]
 bevy = "0.13.0"
+lazy_static = "1.4.0"
+bevy_vector_shapes = "0.7.0"
 image = "0.25.0"
 winit = "0.29.15"
