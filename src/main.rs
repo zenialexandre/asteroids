@@ -49,7 +49,7 @@ fn main() {
         .add_plugins(Shape2dPlugin::default())
         .add_systems(Startup, (setup, set_game_window_icon))
         .add_systems(FixedUpdate, (
-            set_hero_ship_movement,
+            set_hero_ship_movement_and_rotation,
             draw_hero_ship_fire,
             set_hero_ship_position_after_border_outbounds
         ))
@@ -105,89 +105,110 @@ fn set_game_window_icon(
     };
 }
 
-#[doc = "Needs Refactoring."]
-fn set_hero_ship_movement(
+fn set_hero_ship_movement_and_rotation(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut hero_ship_query: Query<(&mut HeroShip, &mut Transform)>
 ) {
-    let mut hero_ship_rotation_factor: f32;
     let mut movement_direction: Vec3;
     let mut movement_distance: f32;
-    let mut translation_delta: Vec3;
 
     for (mut hero_ship_entity, mut hero_ship_transform) in &mut hero_ship_query {
-        if
-            keyboard_input.pressed(KeyCode::ArrowLeft) ||
-            keyboard_input.pressed(KeyCode::KeyA)
-        {
-            if hero_ship_entity.rotation_speed < f32::to_radians(HERO_SHIP_MAX_ROTATION_SPEED) {
-                hero_ship_entity.rotation_speed += f32::to_radians(HERO_SHIP_INCREMENTAL_ROTATION_SPEED);
-            }
-            *HERO_SHIP_ROTATION_FACTOR.lock().unwrap() = 1.;
-        }
-
-        if 
-            keyboard_input.pressed(KeyCode::ArrowRight) ||
-            keyboard_input.pressed(KeyCode::KeyD)
-        {
-            if hero_ship_entity.rotation_speed < f32::to_radians(HERO_SHIP_MAX_ROTATION_SPEED) {
-                hero_ship_entity.rotation_speed += f32::to_radians(HERO_SHIP_INCREMENTAL_ROTATION_SPEED);
-            }
-            *HERO_SHIP_ROTATION_FACTOR.lock().unwrap() = -1.;
-        }
-
-        if 
-            keyboard_input.pressed(KeyCode::ArrowUp) ||
-            keyboard_input.pressed(KeyCode::KeyW)
-        {
-            if hero_ship_entity.movement_speed < HERO_SHIP_MAX_MOVEMENT_SPEED {
-                hero_ship_entity.movement_speed += HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED;
-            }
-        }
-
-        if 
-            keyboard_input.pressed(KeyCode::ArrowDown) ||
-            keyboard_input.pressed(KeyCode::KeyS)
-        {
-            if hero_ship_entity.movement_speed > 0. {
-                hero_ship_entity.movement_speed -= HERO_SHIP_MOVEMENT_SPEED_DRAG * time.delta_seconds();
-            }
-        }
-
-        hero_ship_rotation_factor = *HERO_SHIP_ROTATION_FACTOR.lock().unwrap();
+        set_hero_ship_rotation_factor(&keyboard_input, hero_ship_entity.reborrow());
+        increase_hero_ship_movement_speed(&time, &keyboard_input, hero_ship_entity.reborrow());
 
         hero_ship_transform.rotate_z(
-            hero_ship_rotation_factor * hero_ship_entity.rotation_speed * time.delta_seconds()
+            *HERO_SHIP_ROTATION_FACTOR.lock().unwrap() * hero_ship_entity.rotation_speed * time.delta_seconds()
         );
         movement_direction = hero_ship_transform.rotation * Vec3::Y;
         movement_distance = hero_ship_entity.movement_speed * time.delta_seconds();
-        translation_delta = movement_direction * movement_distance;
-        hero_ship_transform.translation += translation_delta;
+        hero_ship_transform.translation += movement_direction * movement_distance;
 
-        if
-            (
-                !keyboard_input.pressed(KeyCode::ArrowUp) ||
-                !keyboard_input.pressed(KeyCode::KeyW)
-            ) &&
-            hero_ship_entity.movement_speed > 0.
-        {
+        apply_drag_on_hero_ship_movement_speed(&time, &keyboard_input, hero_ship_entity.reborrow());
+        apply_drag_on_hero_ship_rotation_speed(&time, &keyboard_input, hero_ship_entity);
+    }
+}
+
+fn set_hero_ship_rotation_factor(
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    mut hero_ship_entity: Mut<'_, HeroShip>
+) {
+    if
+        keyboard_input.pressed(KeyCode::ArrowLeft) ||
+        keyboard_input.pressed(KeyCode::KeyA)
+    {
+        if hero_ship_entity.rotation_speed < f32::to_radians(HERO_SHIP_MAX_ROTATION_SPEED) {
+            hero_ship_entity.rotation_speed += f32::to_radians(HERO_SHIP_INCREMENTAL_ROTATION_SPEED);
+        }
+        *HERO_SHIP_ROTATION_FACTOR.lock().unwrap() = 1.;
+    }
+
+    if 
+        keyboard_input.pressed(KeyCode::ArrowRight) ||
+        keyboard_input.pressed(KeyCode::KeyD)
+    {
+        if hero_ship_entity.rotation_speed < f32::to_radians(HERO_SHIP_MAX_ROTATION_SPEED) {
+            hero_ship_entity.rotation_speed += f32::to_radians(HERO_SHIP_INCREMENTAL_ROTATION_SPEED);
+        }
+        *HERO_SHIP_ROTATION_FACTOR.lock().unwrap() = -1.;
+    }
+}
+
+fn increase_hero_ship_movement_speed(
+    time: &Res<Time>,
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    mut hero_ship_entity: Mut<'_, HeroShip>
+) {
+    if 
+        keyboard_input.pressed(KeyCode::ArrowUp) ||
+        keyboard_input.pressed(KeyCode::KeyW)
+    {
+        if hero_ship_entity.movement_speed < HERO_SHIP_MAX_MOVEMENT_SPEED {
+            hero_ship_entity.movement_speed += HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED;
+        }
+    }
+
+    if 
+        keyboard_input.pressed(KeyCode::ArrowDown) ||
+        keyboard_input.pressed(KeyCode::KeyS)
+    {
+        if hero_ship_entity.movement_speed > 0. {
             hero_ship_entity.movement_speed -= HERO_SHIP_MOVEMENT_SPEED_DRAG * time.delta_seconds();
         }
+    }
+}
 
-        if
-            (
-                !keyboard_input.pressed(KeyCode::ArrowLeft) ||
-                !keyboard_input.pressed(KeyCode::KeyA)
-            ) &&
-            (
-                !keyboard_input.pressed(KeyCode::ArrowRight) ||
-                !keyboard_input.pressed(KeyCode::KeyD)
-            ) &&
-            hero_ship_entity.rotation_speed > 0.
-        {
-            hero_ship_entity.rotation_speed -= f32::to_radians(HERO_SHIP_ROTATION_SPEED_DRAG) * time.delta_seconds();
-        }
+fn apply_drag_on_hero_ship_movement_speed(
+    time: &Res<Time>,
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    mut hero_ship_entity: Mut<'_, HeroShip>
+) {
+    if
+        (
+            !keyboard_input.pressed(KeyCode::ArrowUp) ||
+            !keyboard_input.pressed(KeyCode::KeyW)
+        ) && hero_ship_entity.movement_speed > 0.
+    {
+        hero_ship_entity.movement_speed -= HERO_SHIP_MOVEMENT_SPEED_DRAG * time.delta_seconds();
+    }
+}
+
+fn apply_drag_on_hero_ship_rotation_speed(
+    time: &Res<Time>,
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    mut hero_ship_entity: Mut<'_, HeroShip>
+) {
+    if
+        (
+            !keyboard_input.pressed(KeyCode::ArrowLeft) ||
+            !keyboard_input.pressed(KeyCode::KeyA)
+        ) &&
+        (
+            !keyboard_input.pressed(KeyCode::ArrowRight) ||
+            !keyboard_input.pressed(KeyCode::KeyD)
+        ) && hero_ship_entity.rotation_speed > 0.
+    {
+        hero_ship_entity.rotation_speed -= f32::to_radians(HERO_SHIP_ROTATION_SPEED_DRAG) * time.delta_seconds();
     }
 }
 
