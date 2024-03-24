@@ -3,7 +3,6 @@ use bevy::{
     window::{EnabledButtons, PrimaryWindow, WindowPosition},
     winit::WinitWindows
 };
-use bevy_vector_shapes::prelude::*;
 use std::io::Cursor;
 use std::sync::Mutex;
 use winit::window::Icon;
@@ -17,10 +16,12 @@ struct HeroShip {
     rotation_speed: f32,
 }
 
+const HERO_SHIP_HANDLE_IMAGE: &str = "textures/sprites/ships/asteroids_hero_ship_24x24.png";
+const HERO_SHIP_FIRE_HANDLE_IMAGE: &str = "textures/sprites/ships/asteroids_hero_ship_fire_24x24.png";
 const HERO_SHIP_MOVEMENT_SPEED_DRAG: f32 = 100.;
 const HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED: f32 = 5.;
 const HERO_SHIP_MAX_MOVEMENT_SPEED: f32 = 320.;
-const HERO_SHIP_ROTATION_SPEED_DRAG: f32 = 150.;
+const HERO_SHIP_ROTATION_SPEED_DRAG: f32 = 250.;
 const HERO_SHIP_INCREMENTAL_ROTATION_SPEED: f32 = 15.;
 const HERO_SHIP_MAX_ROTATION_SPEED: f32 = 360.;
 const BOTTOM_BORDER_POSITION: f32 = -260.;
@@ -46,7 +47,6 @@ fn main() {
                 ..default()
             })
         )
-        .add_plugins(Shape2dPlugin::default())
         .add_systems(Startup, (setup, set_game_window_icon))
         .add_systems(FixedUpdate, (
             set_hero_ship_movement_and_rotation,
@@ -70,8 +70,7 @@ fn set_game_camera(mut commands: Commands) {
 }
 
 fn set_game_hero_ship(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let hero_ship_handle: Handle<Image> =
-        asset_server.load("textures/sprites/ships/asteroids_hero_ship_24x24.png");
+    let hero_ship_handle: Handle<Image> = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
     commands.spawn((
         SpriteBundle {
             texture: hero_ship_handle,
@@ -212,32 +211,19 @@ fn apply_drag_on_hero_ship_rotation_speed(
     }
 }
 
-#[doc = "Needs Revision / Not Working Yet."]
 fn draw_hero_ship_fire(
+    asset_server: Res<AssetServer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    hero_ship_query: Query<(&HeroShip, &Transform)>,
-    mut shape_painter: ShapePainter
+    mut hero_ship_query: Query<(&HeroShip, &mut Handle<Image>)>
 ) {
-    let mut hero_ship_transform_translation: Vec3;
-    let mut hero_ship_transform_translation_start: Vec3;
-    let mut hero_ship_transform_translation_end: Vec3;
-
-    for (_, hero_ship_transform) in &hero_ship_query {
+    for (_, mut hero_ship_handle_image) in &mut hero_ship_query {
         if
             keyboard_input.pressed(KeyCode::ArrowUp) ||
             keyboard_input.pressed(KeyCode::KeyW)
         {
-            hero_ship_transform_translation = hero_ship_transform.translation;
-            hero_ship_transform_translation_start = hero_ship_transform_translation;
-            hero_ship_transform_translation_end = hero_ship_transform_translation;
-            hero_ship_transform_translation_start.x = 0.;
-            hero_ship_transform_translation_start.y -= 8.;
-            hero_ship_transform_translation_end.x -= 2.;
-            hero_ship_transform_translation_end.y -= 15.;
-            shape_painter.color = Color::WHITE;
-            shape_painter.alignment = Alignment::Flat;
-            shape_painter.thickness = 0.1;
-            shape_painter.line(hero_ship_transform_translation_start, hero_ship_transform_translation_end);
+            *hero_ship_handle_image = asset_server.load(HERO_SHIP_FIRE_HANDLE_IMAGE);
+        } else {
+            *hero_ship_handle_image = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
         }
     }
 }
