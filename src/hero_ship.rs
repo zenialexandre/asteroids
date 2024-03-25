@@ -22,7 +22,7 @@ pub struct HeroShip {
     pub rotation_speed: f32,
     pub rotation_speed_drag: f32,
     pub rotation_speed_incrementation: f32,
-    pub rotation_speed_maximum: f32,
+    pub rotation_speed_maximum: f32
 }
 
 lazy_static! { static ref HERO_SHIP_ROTATION_FACTOR: Mutex<f32> = Mutex::new(0.); }

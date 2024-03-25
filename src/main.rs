@@ -38,19 +38,25 @@ fn main() {
                 ..default()
             })
         )
-        .add_systems(Startup, (setup, set_game_window_icon))
+        .add_systems(Startup, setup)
         .add_systems(FixedUpdate, (
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
-            hero_ship::set_hero_ship_position_after_border_outbounds,
-            asteroid::spawn_asteroids_on_screen
+            hero_ship::set_hero_ship_position_after_border_outbounds
         ))
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    windows: NonSend<WinitWindows>,
+    primary_window_query: Query<Entity, With<PrimaryWindow>>
+) {
     set_game_camera(commands.reborrow());
-    set_game_hero_ship(commands.reborrow(), asset_server);
+    set_game_window_icon(windows, primary_window_query);
+    set_game_hero_ship(commands.reborrow(), &asset_server);
+    asteroid::spawn_initial_asteroids(commands, &asset_server);
 }
 
 fn set_game_camera(mut commands: Commands) {
@@ -61,7 +67,7 @@ fn set_game_camera(mut commands: Commands) {
     commands.spawn(camera_2d_bundle);
 }
 
-fn set_game_hero_ship(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn set_game_hero_ship(mut commands: Commands, asset_server: &Res<AssetServer>) {
     let hero_ship_handle: Handle<Image> = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
     commands.spawn((
         SpriteBundle {

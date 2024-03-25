@@ -241,6 +241,7 @@ dependencies = [
  "bevy",
  "image 0.25.0",
  "lazy_static",
+ "rand",
  "winit",
 ]
 
