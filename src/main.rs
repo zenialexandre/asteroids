@@ -7,9 +7,11 @@ use bevy::{
     window::{EnabledButtons, PrimaryWindow, WindowPosition},
     winit::WinitWindows
 };
+
 use std::io::Cursor;
 use winit::window::Icon;
 use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
+
 use constants::hero_ship_movement_values::{
     HERO_SHIP_MOVEMENT_SPEED_DRAG,
     HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED,
@@ -42,7 +44,9 @@ fn main() {
         .add_systems(FixedUpdate, (
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
-            hero_ship::set_hero_ship_position_after_border_outbounds
+            hero_ship::set_hero_ship_position_after_border_outbounds,
+            asteroid::set_asteroid_movement_and_rotation,
+            asteroid::set_asteroid_position_after_border_outbounds
         ))
         .run();
 }

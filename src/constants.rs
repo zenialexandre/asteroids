@@ -7,10 +7,14 @@ pub mod image_handles {
 }
 
 pub mod borders {
-    pub const BOTTOM_BORDER_POSITION: f32 = -260.;
-    pub const TOP_BORDER_POSITION: f32 = 260.;
-    pub const LEFT_BORDER_POSITION: f32 = -400.;
     pub const RIGHT_BORDER_POSITION: f32 = 400.;
+    pub const LEFT_BORDER_POSITION: f32 = -400.;
+    pub const TOP_BORDER_POSITION: f32 = 260.;
+    pub const BOTTOM_BORDER_POSITION: f32 = -260.;
+    pub const RIGHT_BORDER_OFFSCREEN_POSITION: f32 = 440.;
+    pub const LEFT_BORDER_OFFSCREEN_POSITION: f32 = -440.;
+    pub const TOP_BORDER_OFFSCREEN_POSITION: f32 = 300.;
+    pub const BOTTOM_BORDER_OFFSCREEN_POSITION: f32 = -300.;
 }
 
 pub mod hero_ship_movement_values {
