@@ -3,7 +3,7 @@ pub mod image_handles {
     pub const HERO_SHIP_FIRE_HANDLE_IMAGE: &str = "textures/sprites/ships/asteroids_hero_ship_fire_24x24.png";
     pub const SMALL_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_small_asteroid_24x24.png";
     pub const MEDIUM_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_medium_asteroid_48x48.png";
-    pub const BIG_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_big_asteroid_96x96.png";
+    pub const BIG_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_big_asteroid_150x150.png";
 }
 
 pub mod borders {

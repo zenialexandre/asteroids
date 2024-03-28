@@ -73,6 +73,7 @@ fn set_game_camera(mut commands: Commands) {
 
 fn set_game_hero_ship(mut commands: Commands, asset_server: &Res<AssetServer>) {
     let hero_ship_handle: Handle<Image> = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
+
     commands.spawn((
         SpriteBundle {
             texture: hero_ship_handle,

@@ -54,7 +54,7 @@ impl Asteroid {
             asteroid_type: asteroid_type_external,
             handle_image: None,
             movement_speed: None,
-            movement_direction: vec3(thread_rng.gen_range(-1.0..=1.0), thread_rng.gen_range(-1.0..=1.0), 0.) * Vec3::Y,
+            movement_direction: vec3(thread_rng.gen_range(-1.0..=1.0), thread_rng.gen_range(-1.0..=1.0), 0.),
             rotation_speed: None,
             rotation_direction: thread_rng.gen_range(-1.0..=1.0)
         };
@@ -72,8 +72,8 @@ impl Asteroid {
             },
             AsteroidType::BIG => {
                 asteroid_struct.handle_image = Some(asset_server.load(BIG_ASTEROID_HANDLE_IMAGE));
-                asteroid_struct.movement_speed = Some(80.);
-                asteroid_struct.rotation_speed = Some(f32::to_radians(50.));
+                asteroid_struct.movement_speed = Some(60.);
+                asteroid_struct.rotation_speed = Some(f32::to_radians(40.));
             }
         }
         return asteroid_struct;
@@ -128,6 +128,8 @@ pub fn set_asteroid_movement_and_rotation(
 pub fn set_asteroid_position_after_border_outbounds(
     mut asteroid_query: Query<(&mut Asteroid, &mut Transform)>
 ) {
+    let thread_rng: ThreadRng = rand::thread_rng();
+
     for (asteroid_entity, mut asteroid_transform) in &mut asteroid_query {
         let randomic_offscreen_position: Vec3;
         let asteroid_position_x: f32 = asteroid_transform.translation.x;
@@ -139,22 +141,17 @@ pub fn set_asteroid_position_after_border_outbounds(
             asteroid_position_x >= TOP_BORDER_OFFSCREEN_POSITION ||
             asteroid_position_y <= BOTTOM_BORDER_OFFSCREEN_POSITION
         {
-            randomic_offscreen_position = get_randomic_asteroid_offscreen_position();
+            randomic_offscreen_position = get_randomic_asteroid_offscreen_position(thread_rng.clone());
             asteroid_transform.translation.x = randomic_offscreen_position.x;
             asteroid_transform.translation.y = randomic_offscreen_position.y;
-            set_asteroid_movement_direction_after_border_outbounds(asteroid_entity, asteroid_transform);
+
+            set_asteroid_movement_direction_after_border_outbounds(
+                asteroid_entity,
+                asteroid_transform,
+                thread_rng.clone()
+            );
         }
     }
-}
-
-fn set_asteroid_movement_direction_after_border_outbounds(
-    mut asteroid_entity: Mut<'_, Asteroid>,
-    asteroid_transform: Mut<'_, Transform>
-) {
-    let mut thread_rng: ThreadRng = rand::thread_rng();
-
-    if asteroid_transform.x >= 0 
-    asteroid_entity.movement_direction = vec3(thread_rng.gen_range(-1.1..1.1), thread_rng.gen_range(-1.1..1.1), 0.) * Vec3::Y;
 }
 
 fn get_randomic_asteroid_onscreen_position(
@@ -178,9 +175,7 @@ fn get_randomic_asteroid_onscreen_position(
     return randomic_asteroid_position;
 }
 
-fn get_randomic_asteroid_offscreen_position() -> Vec3 {
-    let thread_rng: ThreadRng = rand::thread_rng();
-
+fn get_randomic_asteroid_offscreen_position(thread_rng: ThreadRng) -> Vec3 {
     return vec3(
         get_randomic_asteroid_offscreen_x_position(thread_rng.clone()),
         get_randomic_asteroid_offscreen_y_position(thread_rng.clone()),
@@ -194,8 +189,7 @@ fn get_randomic_asteroid_offscreen_x_position(mut thread_rng: ThreadRng) -> f32 
             LEFT_BORDER_OFFSCREEN_POSITION + 10.0..RIGHT_BORDER_OFFSCREEN_POSITION - 10.0
         );
         
-        if !(randomic_number >= LEFT_BORDER_POSITION && randomic_number <= RIGHT_BORDER_POSITION) {
-            println!("randomic_number x: {}", randomic_number);
+        if randomic_number < LEFT_BORDER_POSITION || randomic_number > RIGHT_BORDER_POSITION {
             break randomic_number;
         }
     };
@@ -208,10 +202,27 @@ fn get_randomic_asteroid_offscreen_y_position(mut thread_rng: ThreadRng) -> f32 
             BOTTOM_BORDER_OFFSCREEN_POSITION + 10.0..TOP_BORDER_OFFSCREEN_POSITION - 10.0
         );
 
-        if !(randomic_number >= BOTTOM_BORDER_OFFSCREEN_POSITION && randomic_number <= TOP_BORDER_POSITION) {
-            println!("randomic_number y: {}", randomic_number);
+        if randomic_number < BOTTOM_BORDER_POSITION || randomic_number > TOP_BORDER_POSITION {
             break randomic_number;
         }
     };
     return randomic_asteroid_offscreen_y_position;
+}
+
+fn set_asteroid_movement_direction_after_border_outbounds(
+    mut asteroid_entity: Mut<'_, Asteroid>,
+    asteroid_transform: Mut<'_, Transform>,
+    mut thread_rng: ThreadRng
+) {
+    if asteroid_transform.translation.x > 0. {
+        asteroid_entity.movement_direction = vec3(-1., thread_rng.gen_range(BOTTOM_BORDER_POSITION..TOP_BORDER_OFFSCREEN_POSITION), 0.);
+    } else if asteroid_transform.translation.x < 0. {
+        asteroid_entity.movement_direction = vec3(1., thread_rng.gen_range(BOTTOM_BORDER_POSITION..TOP_BORDER_OFFSCREEN_POSITION), 0.);
+    }
+
+    if asteroid_transform.translation.y > 0. {
+        asteroid_entity.movement_direction = vec3(thread_rng.gen_range(LEFT_BORDER_POSITION..RIGHT_BORDER_POSITION), -1., 0.);
+    } else if asteroid_transform.translation.y < 0. {
+        asteroid_entity.movement_direction = vec3(thread_rng.gen_range(LEFT_BORDER_POSITION..RIGHT_BORDER_POSITION), 1., 0.);
+    }
 }
