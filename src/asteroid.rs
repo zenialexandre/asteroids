@@ -25,7 +25,8 @@ use crate::constants::borders::{
     BOTTOM_BORDER_OFFSCREEN_POSITION
 };
 
-use crate::constants::asteroid::BIG_ASTEROID_ON_SCREEN_MAX_VALUE;
+use crate::constants::asteroid::INITIAL_BIG_ASTEROIDS_ONSCREEN;
+use crate::hero_ship::HeroShip;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 enum AsteroidType {
@@ -44,33 +45,43 @@ pub struct Asteroid {
     rotation_direction: f32
 }
 
-impl Asteroid {
-    fn initialize_asteroid_based_on_type(
-        asset_server: &Res<AssetServer>,
-        asteroid_type_external: AsteroidType
-    ) -> Self {
+impl Default for Asteroid {
+    fn default() -> Self {
         let mut thread_rng: ThreadRng = rand::thread_rng();
-        let mut asteroid_struct: Asteroid = Asteroid {
-            asteroid_type: asteroid_type_external,
+
+        return Self {
+            asteroid_type: AsteroidType::BIG,
             handle_image: None,
             movement_speed: None,
             movement_direction: vec3(thread_rng.gen_range(-1.0..=1.0), thread_rng.gen_range(-1.0..=1.0), 0.),
             rotation_speed: None,
             rotation_direction: thread_rng.gen_range(-1.0..=1.0)
         };
+    }
+}
 
-        match asteroid_struct.asteroid_type {
+impl Asteroid {
+    fn initialize_asteroid_based_on_type(
+        asset_server: &Res<AssetServer>,
+        asteroid_type: AsteroidType
+    ) -> Self {
+        let mut asteroid_struct: Asteroid = Asteroid::default();
+
+        match asteroid_type {
             AsteroidType::SMALL => {
+                asteroid_struct.asteroid_type = asteroid_type;
                 asteroid_struct.handle_image = Some(asset_server.load(SMALL_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(320.);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(150.));
             },
             AsteroidType::MEDIUM => {
+                asteroid_struct.asteroid_type = asteroid_type;
                 asteroid_struct.handle_image = Some(asset_server.load(MEDIUM_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(160.);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(100.));
             },
             AsteroidType::BIG => {
+                asteroid_struct.asteroid_type = asteroid_type;
                 asteroid_struct.handle_image = Some(asset_server.load(BIG_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(60.);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(40.));
@@ -87,7 +98,7 @@ pub fn spawn_initial_asteroids(
     let mut random_asteroid_position_x: f32;
     let mut random_asteroid_position_y: f32;
 
-    for _ in 1..=BIG_ASTEROID_ON_SCREEN_MAX_VALUE {
+    for _ in 1..=INITIAL_BIG_ASTEROIDS_ONSCREEN {
         let asteroid_struct: Asteroid = Asteroid::initialize_asteroid_based_on_type(asset_server, AsteroidType::BIG);
         random_asteroid_position_x = get_randomic_asteroid_onscreen_position(LEFT_BORDER_POSITION, RIGHT_BORDER_POSITION);
         random_asteroid_position_y = get_randomic_asteroid_onscreen_position(BOTTOM_BORDER_POSITION, TOP_BORDER_POSITION);
@@ -126,8 +137,10 @@ pub fn set_asteroid_movement_and_rotation(
 }
 
 pub fn set_asteroid_position_after_border_outbounds(
+    hero_ship_query: Query<(&HeroShip, &Transform), Without<Asteroid>>,
     mut asteroid_query: Query<(&mut Asteroid, &mut Transform)>
 ) {
+    let (_, hero_ship_transform) = hero_ship_query.single();
     let thread_rng: ThreadRng = rand::thread_rng();
 
     for (asteroid_entity, mut asteroid_transform) in &mut asteroid_query {
@@ -146,6 +159,7 @@ pub fn set_asteroid_position_after_border_outbounds(
             asteroid_transform.translation.y = randomic_offscreen_position.y;
 
             set_asteroid_movement_direction_after_border_outbounds(
+                hero_ship_transform,
                 asteroid_entity,
                 asteroid_transform,
                 thread_rng.clone()
@@ -163,11 +177,11 @@ fn get_randomic_asteroid_onscreen_position(
     let mut randomic_asteroid_position: f32 = 0.;
 
     while !is_randomic_position_ok {
-        randomic_asteroid_position = thread_rng.gen_range(position_initial_range..=position_final_range + 1.);
+        randomic_asteroid_position = thread_rng.gen_range(position_initial_range..=position_final_range);
 
         if
-            randomic_asteroid_position >= 25. ||
-            randomic_asteroid_position <= -25.
+            randomic_asteroid_position >= 20. ||
+            randomic_asteroid_position <= -20.
         {
             is_randomic_position_ok = true;
         }
@@ -186,10 +200,10 @@ fn get_randomic_asteroid_offscreen_position(thread_rng: ThreadRng) -> Vec3 {
 fn get_randomic_asteroid_offscreen_x_position(mut thread_rng: ThreadRng) -> f32 {
     let randomic_asteroid_offscreen_x_position: f32 = loop {
         let randomic_number: f32 = thread_rng.gen_range(
-            LEFT_BORDER_OFFSCREEN_POSITION + 10.0..RIGHT_BORDER_OFFSCREEN_POSITION - 10.0
+            LEFT_BORDER_OFFSCREEN_POSITION + 5.0..=RIGHT_BORDER_OFFSCREEN_POSITION - 5.0
         );
-        
-        if randomic_number < LEFT_BORDER_POSITION || randomic_number > RIGHT_BORDER_POSITION {
+
+        if randomic_number > LEFT_BORDER_OFFSCREEN_POSITION || randomic_number < RIGHT_BORDER_OFFSCREEN_POSITION {
             break randomic_number;
         }
     };
@@ -199,10 +213,10 @@ fn get_randomic_asteroid_offscreen_x_position(mut thread_rng: ThreadRng) -> f32 
 fn get_randomic_asteroid_offscreen_y_position(mut thread_rng: ThreadRng) -> f32 {
     let randomic_asteroid_offscreen_y_position: f32 = loop {
         let randomic_number: f32 = thread_rng.gen_range(
-            BOTTOM_BORDER_OFFSCREEN_POSITION + 10.0..TOP_BORDER_OFFSCREEN_POSITION - 10.0
+            BOTTOM_BORDER_OFFSCREEN_POSITION + 5.0..=TOP_BORDER_OFFSCREEN_POSITION - 5.0
         );
 
-        if randomic_number < BOTTOM_BORDER_POSITION || randomic_number > TOP_BORDER_POSITION {
+        if randomic_number > BOTTOM_BORDER_OFFSCREEN_POSITION || randomic_number < TOP_BORDER_OFFSCREEN_POSITION {
             break randomic_number;
         }
     };
@@ -210,19 +224,40 @@ fn get_randomic_asteroid_offscreen_y_position(mut thread_rng: ThreadRng) -> f32 
 }
 
 fn set_asteroid_movement_direction_after_border_outbounds(
+    hero_ship_transform: &Transform,
     mut asteroid_entity: Mut<'_, Asteroid>,
     asteroid_transform: Mut<'_, Transform>,
     mut thread_rng: ThreadRng
 ) {
-    if asteroid_transform.translation.x > 0. {
-        asteroid_entity.movement_direction = vec3(-1., thread_rng.gen_range(BOTTOM_BORDER_POSITION..TOP_BORDER_OFFSCREEN_POSITION), 0.);
-    } else if asteroid_transform.translation.x < 0. {
-        asteroid_entity.movement_direction = vec3(1., thread_rng.gen_range(BOTTOM_BORDER_POSITION..TOP_BORDER_OFFSCREEN_POSITION), 0.);
+    if asteroid_transform.translation.x < LEFT_BORDER_POSITION {
+        asteroid_entity.movement_direction = vec3(
+            1.,
+            thread_rng.gen::<f32>() * hero_ship_transform.translation.y,
+            0.
+        ) * Vec3::Y;
     }
 
-    if asteroid_transform.translation.y > 0. {
-        asteroid_entity.movement_direction = vec3(thread_rng.gen_range(LEFT_BORDER_POSITION..RIGHT_BORDER_POSITION), -1., 0.);
-    } else if asteroid_transform.translation.y < 0. {
-        asteroid_entity.movement_direction = vec3(thread_rng.gen_range(LEFT_BORDER_POSITION..RIGHT_BORDER_POSITION), 1., 0.);
+    if asteroid_transform.translation.x > RIGHT_BORDER_POSITION {
+        asteroid_entity.movement_direction = vec3(
+            -1.,
+            thread_rng.gen::<f32>() * hero_ship_transform.translation.y,
+            0.
+        ) * Vec3::Y;
+    }
+
+    if asteroid_transform.translation.y < BOTTOM_BORDER_POSITION {
+        asteroid_entity.movement_direction = vec3(
+            thread_rng.gen::<f32>() * hero_ship_transform.translation.x,
+            1.,
+            0.
+        ) * Vec3::Y;
+    }
+
+    if asteroid_transform.translation.y > TOP_BORDER_POSITION {
+        asteroid_entity.movement_direction = vec3(
+            thread_rng.gen::<f32>() * hero_ship_transform.translation.x,
+            -1.,
+            0.
+        ) * Vec3::Y;
     }
 }

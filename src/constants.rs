@@ -27,5 +27,5 @@ pub mod hero_ship_movement_values {
 }
 
 pub mod asteroid {
-    pub const BIG_ASTEROID_ON_SCREEN_MAX_VALUE: usize = 4;
+    pub const INITIAL_BIG_ASTEROIDS_ONSCREEN: usize = 4;
 }

@@ -128,7 +128,7 @@ fn set_fps_counter(
     mut fps_counter_state: ResMut<FpsCounter>,
     mut fps_counter_text_query: Query<&mut Text, With<FpsCounterText>>
 ) {
-    let mut fps_counter_text = fps_counter_text_query.single_mut();
+    let mut fps_counter_text: Mut<'_, Text> = fps_counter_text_query.single_mut();
     fps_counter_text.sections[0].style.font_size = 15.;
     fps_counter_state.enable();
 }
