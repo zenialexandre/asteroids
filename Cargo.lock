@@ -239,6 +239,7 @@ name = "asteroids"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy-fps-counter",
  "image 0.25.0",
  "lazy_static",
  "rand",
@@ -358,6 +359,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "611dd99f412e862610adb43e2243b16436c6d8009f6d9dbe8ce3d6d840b34029"
 dependencies = [
  "bevy_internal",
+]
+
+[[package]]
+name = "bevy-fps-counter"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de338980a3c2e0ee90bd5322626034e037800b5f9431839197000471cf5fd557"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

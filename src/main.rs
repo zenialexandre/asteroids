@@ -8,6 +8,12 @@ use bevy::{
     winit::WinitWindows
 };
 
+use bevy_fps_counter::{
+    FpsCounter,
+    FpsCounterText,
+    FpsCounterPlugin
+};
+
 use std::io::Cursor;
 use winit::window::Icon;
 use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
@@ -40,7 +46,9 @@ fn main() {
                 ..default()
             })
         )
+        .add_plugins(FpsCounterPlugin)
         .add_systems(Startup, setup)
+        .add_systems(PostStartup, set_fps_counter)
         .add_systems(FixedUpdate, (
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
@@ -71,7 +79,10 @@ fn set_game_camera(mut commands: Commands) {
     commands.spawn(camera_2d_bundle);
 }
 
-fn set_game_hero_ship(mut commands: Commands, asset_server: &Res<AssetServer>) {
+fn set_game_hero_ship(
+    mut commands: Commands,
+    asset_server: &Res<AssetServer>
+) {
     let hero_ship_handle: Handle<Image> = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
 
     commands.spawn((
@@ -111,4 +122,13 @@ fn set_game_window_icon(
         let asteroids_game_icon: Icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
         primary_window.set_window_icon(Some(asteroids_game_icon));
     };
+}
+
+fn set_fps_counter(
+    mut fps_counter_state: ResMut<FpsCounter>,
+    mut fps_counter_text_query: Query<&mut Text, With<FpsCounterText>>
+) {
+    let mut fps_counter_text = fps_counter_text_query.single_mut();
+    fps_counter_text.sections[0].style.font_size = 15.;
+    fps_counter_state.enable();
 }
