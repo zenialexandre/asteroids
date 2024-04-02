@@ -1,5 +1,3 @@
-use core::panic;
-
 use bevy::{
     prelude::*,
     math::vec3
