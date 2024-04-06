@@ -1,9 +1,20 @@
 use bevy::prelude::*;
 use std::sync::Mutex;
 
+use crate::projectile::Projectile;
+
 use crate::constants::image_handles::{
     HERO_SHIP_HANDLE_IMAGE,
     HERO_SHIP_FIRE_HANDLE_IMAGE
+};
+
+use crate::constants::hero_ship_movement_values::{
+    HERO_SHIP_MOVEMENT_SPEED_DRAG,
+    HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED,
+    HERO_SHIP_MAX_MOVEMENT_SPEED,
+    HERO_SHIP_ROTATION_SPEED_DRAG,
+    HERO_SHIP_INCREMENTAL_ROTATION_SPEED,
+    HERO_SHIP_MAX_ROTATION_SPEED
 };
 
 use crate::constants::borders::{
@@ -23,6 +34,21 @@ pub struct HeroShip {
     pub rotation_speed_drag: f32,
     pub rotation_speed_incrementation: f32,
     pub rotation_speed_maximum: f32
+}
+
+impl Default for HeroShip {
+    fn default() -> Self {
+        return Self {
+            movement_speed: 0.,
+            movement_speed_drag: HERO_SHIP_MOVEMENT_SPEED_DRAG,
+            movement_speed_incrementation: HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED,
+            movement_speed_maximum: HERO_SHIP_MAX_MOVEMENT_SPEED,
+            rotation_speed: 0.,
+            rotation_speed_drag: HERO_SHIP_ROTATION_SPEED_DRAG,
+            rotation_speed_incrementation: HERO_SHIP_INCREMENTAL_ROTATION_SPEED,
+            rotation_speed_maximum: HERO_SHIP_MAX_ROTATION_SPEED
+        };
+    }
 }
 
 lazy_static! { static ref HERO_SHIP_ROTATION_FACTOR: Mutex<f32> = Mutex::new(0.); }
@@ -96,7 +122,7 @@ fn apply_brake_on_hero_ship_movement_speed(
     keyboard_input: &Res<ButtonInput<KeyCode>>,
     mut hero_ship_entity: Mut<'_, HeroShip>
 ) {
-    if 
+    if
         keyboard_input.pressed(KeyCode::ArrowDown) ||
         keyboard_input.pressed(KeyCode::KeyS)
     {
@@ -178,5 +204,19 @@ pub fn set_hero_ship_position_after_border_outbounds(
     } else if hero_ship_position_y <= BOTTOM_BORDER_POSITION {
         hero_ship_transform.translation.y = TOP_BORDER_POSITION;
         hero_ship_transform.translation.x += 10.;
+    }
+}
+
+pub fn hero_ship_fire_projectile(
+    commands: Commands,
+    asset_server: Res<AssetServer>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    hero_ship_query: Query<(&HeroShip, &Transform)>
+) {
+    if keyboard_input.pressed(KeyCode::Space) {
+        let (_, hero_ship_transform) = hero_ship_query.single();
+        let mut projectile_entity: Projectile = Projectile::default();
+        projectile_entity.translation = hero_ship_transform.translation;
+        Projectile::spawn_projectile(projectile_entity, commands, asset_server);
     }
 }

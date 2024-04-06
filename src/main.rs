@@ -1,6 +1,7 @@
 mod constants;
 mod hero_ship;
 mod asteroid;
+mod projectile;
 
 use bevy::{
     prelude::*,
@@ -17,15 +18,6 @@ use bevy_fps_counter::{
 use std::io::Cursor;
 use winit::window::Icon;
 use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
-
-use constants::hero_ship_movement_values::{
-    HERO_SHIP_MOVEMENT_SPEED_DRAG,
-    HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED,
-    HERO_SHIP_MAX_MOVEMENT_SPEED,
-    HERO_SHIP_ROTATION_SPEED_DRAG,
-    HERO_SHIP_INCREMENTAL_ROTATION_SPEED,
-    HERO_SHIP_MAX_ROTATION_SPEED
-};
 
 #[macro_use]
 extern crate lazy_static;
@@ -53,6 +45,8 @@ fn main() {
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
             hero_ship::set_hero_ship_position_after_border_outbounds,
+            hero_ship::hero_ship_fire_projectile,
+            projectile::set_projectile_movement,
             asteroid::set_asteroid_movement_and_rotation,
             asteroid::set_asteroid_position_after_border_outbounds
         ))
@@ -90,16 +84,7 @@ fn set_game_hero_ship(
             texture: hero_ship_handle,
             ..default()
         },
-        hero_ship::HeroShip {
-            movement_speed: 0.,
-            movement_speed_drag: HERO_SHIP_MOVEMENT_SPEED_DRAG,
-            movement_speed_incrementation: HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED,
-            movement_speed_maximum: HERO_SHIP_MAX_MOVEMENT_SPEED,
-            rotation_speed: 0.,
-            rotation_speed_drag: HERO_SHIP_ROTATION_SPEED_DRAG,
-            rotation_speed_incrementation: HERO_SHIP_INCREMENTAL_ROTATION_SPEED,
-            rotation_speed_maximum: HERO_SHIP_MAX_ROTATION_SPEED
-        },
+        hero_ship::HeroShip::default(),
     ));
 }
 

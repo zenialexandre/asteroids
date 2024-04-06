@@ -27,6 +27,15 @@ use crate::constants::borders::{
 
 use crate::constants::asteroid::INITIAL_BIG_ASTEROIDS_ONSCREEN;
 
+use crate::constants::asteroid_movement_values::{
+    SMALL_ASTEROID_MOVEMENT_SPEED,
+    SMALL_ASTEROID_ROTATION_SPEED,
+    MEDIUM_ASTEROID_MOVEMENT_SPEED,
+    MEDIUM_ASTEROID_ROTATION_SPEED,
+    BIG_ASTEROID_MOVEMENT_SPEED,
+    BIG_ASTEROID_ROTATION_SPEED
+};
+
 #[derive(Debug)]
 enum BorderSide {
     Right,
@@ -92,20 +101,20 @@ impl Asteroid {
             AsteroidType::Small => {
                 asteroid_struct.asteroid_type = asteroid_type;
                 asteroid_struct.handle_image = Some(asset_server.load(SMALL_ASTEROID_HANDLE_IMAGE));
-                asteroid_struct.movement_speed = Some(320.);
-                asteroid_struct.rotation_speed = Some(f32::to_radians(150.));
+                asteroid_struct.movement_speed = Some(SMALL_ASTEROID_MOVEMENT_SPEED);
+                asteroid_struct.rotation_speed = Some(f32::to_radians(SMALL_ASTEROID_ROTATION_SPEED));
             },
             AsteroidType::Medium => {
                 asteroid_struct.asteroid_type = asteroid_type;
                 asteroid_struct.handle_image = Some(asset_server.load(MEDIUM_ASTEROID_HANDLE_IMAGE));
-                asteroid_struct.movement_speed = Some(160.);
-                asteroid_struct.rotation_speed = Some(f32::to_radians(100.));
+                asteroid_struct.movement_speed = Some(MEDIUM_ASTEROID_MOVEMENT_SPEED);
+                asteroid_struct.rotation_speed = Some(f32::to_radians(MEDIUM_ASTEROID_ROTATION_SPEED));
             },
             AsteroidType::Big => {
                 asteroid_struct.asteroid_type = asteroid_type;
                 asteroid_struct.handle_image = Some(asset_server.load(BIG_ASTEROID_HANDLE_IMAGE));
-                asteroid_struct.movement_speed = Some(60.);
-                asteroid_struct.rotation_speed = Some(f32::to_radians(40.));
+                asteroid_struct.movement_speed = Some(BIG_ASTEROID_MOVEMENT_SPEED);
+                asteroid_struct.rotation_speed = Some(f32::to_radians(BIG_ASTEROID_ROTATION_SPEED));
             }
         }
         return asteroid_struct;
