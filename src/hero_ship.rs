@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::sync::Mutex;
 
-use crate::projectile::Projectile;
+use crate::projectile::{self, Projectile};
 
 use crate::constants::image_handles::{
     HERO_SHIP_HANDLE_IMAGE,
@@ -210,13 +210,20 @@ pub fn set_hero_ship_position_after_border_outbounds(
 pub fn hero_ship_fire_projectile(
     commands: Commands,
     asset_server: Res<AssetServer>,
+    time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut projectile_spawn_timer: ResMut<projectile::ProjectileSpawnTimer>,
     hero_ship_query: Query<(&HeroShip, &Transform)>
 ) {
     if keyboard_input.pressed(KeyCode::Space) {
         let (_, hero_ship_transform) = hero_ship_query.single();
         let mut projectile_entity: Projectile = Projectile::default();
-        projectile_entity.translation = hero_ship_transform.translation;
-        Projectile::spawn_projectile(projectile_entity, commands, asset_server);
+        projectile_spawn_timer.0.tick(time.delta()); 
+
+        if projectile_spawn_timer.0.just_finished() {
+            projectile_entity.translation = hero_ship_transform.translation;
+            projectile_entity.direction = hero_ship_transform.rotation * Vec3::Y;
+            Projectile::spawn_projectile(projectile_entity, commands, asset_server);
+        }
     }
 }

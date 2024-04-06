@@ -46,15 +46,24 @@ impl Projectile {
     }
 }
 
+#[derive(Resource)]
+pub struct ProjectileSpawnTimer(pub Timer);
+
+impl Default for ProjectileSpawnTimer {
+    fn default() -> Self {
+        return  Self(Timer::from_seconds(0.2, TimerMode::Repeating));
+    }
+}
+
 pub fn set_projectile_movement(
     time: Res<Time>,
-    mut projectile_query: Query<(&mut Projectile, &mut Transform, &mut Visibility)>
+    mut projectile_query: Query<(&Projectile, &mut Transform, &mut Visibility)>
 ) {
     let mut movement_distance: f32;
 
-    for (mut projectile_entity, mut projectile_transform, mut projectile_visibility) in &mut projectile_query {
+    for (projectile_entity, mut projectile_transform, mut projectile_visibility) in &mut projectile_query {
         movement_distance = projectile_entity.movement_speed * time.delta_seconds();
-        projectile_transform.translation += movement_distance;
+        projectile_transform.translation += movement_distance * projectile_entity.direction;
         *projectile_visibility = Visibility::Visible;
     }
 }

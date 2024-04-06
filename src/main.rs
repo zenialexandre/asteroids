@@ -39,6 +39,7 @@ fn main() {
             })
         )
         .add_plugins(FpsCounterPlugin)
+        .init_resource::<projectile::ProjectileSpawnTimer>()
         .add_systems(Startup, setup)
         .add_systems(PostStartup, set_fps_counter)
         .add_systems(FixedUpdate, (
