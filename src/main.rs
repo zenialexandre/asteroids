@@ -2,6 +2,7 @@ mod constants;
 mod hero_ship;
 mod asteroid;
 mod projectile;
+mod collision;
 
 use bevy::{
     prelude::*,

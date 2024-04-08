@@ -25,8 +25,6 @@ use crate::constants::borders::{
     BOTTOM_BORDER_OFFSCREEN_POSITION
 };
 
-use crate::constants::asteroid::INITIAL_BIG_ASTEROIDS_ONSCREEN;
-
 use crate::constants::asteroid_movement_values::{
     SMALL_ASTEROID_MOVEMENT_SPEED,
     SMALL_ASTEROID_ROTATION_SPEED,
@@ -35,6 +33,9 @@ use crate::constants::asteroid_movement_values::{
     BIG_ASTEROID_MOVEMENT_SPEED,
     BIG_ASTEROID_ROTATION_SPEED
 };
+
+use crate::collision::Collider;
+use crate::constants::asteroid::INITIAL_BIG_ASTEROIDS_ONSCREEN;
 
 #[derive(Debug)]
 enum BorderSide {
@@ -146,7 +147,8 @@ pub fn spawn_initial_asteroids(
                 },
                 ..default()
             },
-            asteroid_struct
+            asteroid_struct,
+            Collider
         ));
     }
 }
