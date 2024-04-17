@@ -3,6 +3,11 @@ use bevy::{
     math::vec3
 };
 
+use bevy_rapier2d::{
+    prelude::*,
+    geometry::Collider
+};
+
 use crate::constants::image_handles::PROJECTILE_HANDLE_IMAGE;
 use crate::constants::projectile_movement_values::PROJECTILE_MOVEMENT_SPEED;
 
@@ -42,7 +47,10 @@ impl Projectile {
                 ..default()
             },
             self
-        ));
+        ))
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::ball(3.5))
+        .insert(GravityScale(0.));
     }
 }
 

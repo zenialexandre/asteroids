@@ -16,6 +16,7 @@ use bevy_fps_counter::{
     FpsCounterPlugin
 };
 
+use bevy_rapier2d::prelude::*;
 use std::io::Cursor;
 use winit::window::Icon;
 use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
@@ -40,6 +41,8 @@ fn main() {
             })
         )
         .add_plugins(FpsCounterPlugin)
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
+        .add_plugins(RapierDebugRenderPlugin::default())
         .init_resource::<projectile::ProjectileSpawnTimer>()
         .add_systems(Startup, setup)
         .add_systems(PostStartup, set_fps_counter)

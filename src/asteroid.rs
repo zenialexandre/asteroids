@@ -8,6 +8,11 @@ use rand::{
     Rng
 };
 
+use bevy_rapier2d::{
+    prelude::*,
+    geometry::Collider
+};
+
 use crate::constants::image_handles::{
     SMALL_ASTEROID_HANDLE_IMAGE,
     MEDIUM_ASTEROID_HANDLE_IMAGE,
@@ -34,7 +39,6 @@ use crate::constants::asteroid_movement_values::{
     BIG_ASTEROID_ROTATION_SPEED
 };
 
-use crate::collision::Collider;
 use crate::constants::asteroid::INITIAL_BIG_ASTEROIDS_ONSCREEN;
 
 #[derive(Debug)]
@@ -148,8 +152,10 @@ pub fn spawn_initial_asteroids(
                 ..default()
             },
             asteroid_struct,
-            Collider
-        ));
+        ))
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::ball(70.))
+        .insert(GravityScale(0.));
     }
 }
 

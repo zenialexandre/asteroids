@@ -8,11 +8,8 @@ use bevy::{
     }
 };
 
-use crate::asteroid::{self, Asteroid};
+use crate::asteroid::Asteroid;
 use crate::projectile::Projectile;
-
-#[derive(Component)]
-pub struct Collider;
 
 
 #[derive(Debug)]
@@ -23,7 +20,7 @@ pub enum CollisionSide {
     Bottom
 }
 
-pub fn get_projectile_and_asteroid_collision(
+/*pub fn get_projectile_and_asteroid_collision(
     mut commands: Commands,
     projectile_query: Query<&Transform, With<Projectile>>,
     collider_query: Query<(Entity, &Transform, Option<&Asteroid>), With<Collider>>
@@ -49,7 +46,7 @@ pub fn get_projectile_and_asteroid_collision(
             }
         }
     }
-}
+}*/
 
 fn projectile_collision(
     projectile: BoundingCircle,
