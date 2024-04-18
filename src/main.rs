@@ -53,7 +53,8 @@ fn main() {
             hero_ship::hero_ship_fire_projectile,
             projectile::set_projectile_movement,
             asteroid::set_asteroid_movement_and_rotation,
-            asteroid::set_asteroid_position_after_border_outbounds
+            asteroid::set_asteroid_position_after_border_outbounds,
+            collision::detect_asteroid_collision
         ))
         .run();
 }

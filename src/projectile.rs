@@ -11,7 +11,7 @@ use bevy_rapier2d::{
 use crate::constants::image_handles::PROJECTILE_HANDLE_IMAGE;
 use crate::constants::projectile_movement_values::PROJECTILE_MOVEMENT_SPEED;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Projectile {
     pub translation: Vec3,
     pub direction: Vec3,
@@ -48,8 +48,10 @@ impl Projectile {
             },
             self
         ))
+        .insert(Name::new("Projectile"))
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(3.5))
+        .insert(CollisionGroups::new(Group::GROUP_10, Group::all()))
         .insert(GravityScale(0.));
     }
 }

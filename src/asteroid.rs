@@ -70,14 +70,14 @@ enum AsteroidType {
     Big
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug)]
 pub struct Asteroid {
     asteroid_type: AsteroidType,
-    handle_image: Option<Handle<Image>>,
-    movement_speed: Option<f32>,
-    movement_direction: Vec3,
-    rotation_speed: Option<f32>,
-    rotation_direction: f32
+    pub handle_image: Option<Handle<Image>>,
+    pub movement_speed: Option<f32>,
+    pub movement_direction: Vec3,
+    pub rotation_speed: Option<f32>,
+    pub rotation_direction: f32
 }
 
 impl Default for Asteroid {
@@ -153,9 +153,13 @@ pub fn spawn_initial_asteroids(
             },
             asteroid_struct,
         ))
+        .insert(Name::new("Asteroid"))
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(70.))
-        .insert(GravityScale(0.));
+        .insert(GravityScale(0.))
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_10))
+        .insert(Dominance::group(10));
     }
 }
 
