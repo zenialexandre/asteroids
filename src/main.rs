@@ -24,6 +24,18 @@ use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
 #[macro_use]
 extern crate lazy_static;
 
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+enum GameState {
+    StartScreen,
+    InGame
+}
+
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+enum PausingState {
+    Paused,
+    Running
+}
+
 fn main() {
     App::new()
         .add_plugins(
@@ -42,7 +54,8 @@ fn main() {
         )
         .add_plugins(FpsCounterPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
-        .add_plugins(RapierDebugRenderPlugin::default())
+        .insert_state(GameState::StartScreen)
+        .insert_state(PausingState::Paused)
         .init_resource::<projectile::ProjectileSpawnTimer>()
         .add_systems(Startup, setup)
         .add_systems(PostStartup, set_fps_counter)

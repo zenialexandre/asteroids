@@ -14,14 +14,14 @@ pub fn detect_asteroid_collision(
         match *collision_event {
             CollisionEvent::Started(first_entity, second_entity, _) => {
                 for asteroid_entity in &asteroid_query {
-                    let projectile_entity: Entity = projectile_query.single();
-
-                    if 
-                        (asteroid_entity == first_entity || asteroid_entity == second_entity) &&
-                        (projectile_entity == first_entity || projectile_entity == second_entity)
-                    {
-                        commands.entity(first_entity).despawn();
-                        commands.entity(second_entity).despawn();
+                    for projectile_entity in &projectile_query {
+                        if 
+                            (asteroid_entity == first_entity || asteroid_entity == second_entity) &&
+                            (projectile_entity == first_entity || projectile_entity == second_entity)
+                        {
+                            commands.entity(first_entity).despawn();
+                            commands.entity(second_entity).despawn();
+                        }
                     }
                 }
             },
