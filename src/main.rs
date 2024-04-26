@@ -3,6 +3,7 @@ mod hero_ship;
 mod asteroid;
 mod projectile;
 mod collision;
+mod ui;
 
 use bevy::{
     prelude::*,
@@ -24,15 +25,17 @@ use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
 #[macro_use]
 extern crate lazy_static;
 
-#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
+    #[default]
     StartScreen,
     InGame
 }
 
-#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 enum PausingState {
     Paused,
+    #[default]
     Running
 }
 
@@ -54,12 +57,17 @@ fn main() {
         )
         .add_plugins(FpsCounterPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
-        .insert_state(GameState::StartScreen)
-        .insert_state(PausingState::Paused)
+        .init_state::<GameState>()
+        .init_state::<PausingState>()
         .init_resource::<projectile::ProjectileSpawnTimer>()
         .add_systems(Startup, setup)
         .add_systems(PostStartup, set_fps_counter)
+        .add_systems(Update, check_for_pausing_by_keyboard)
+        .add_systems(FixedUpdate,
+            ui::spawn_pause_menu.run_if(in_state(PausingState::Paused))
+        )
         .add_systems(FixedUpdate, (
+            ui::erase_pause_menu,
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
             hero_ship::set_hero_ship_position_after_border_outbounds,
@@ -68,8 +76,8 @@ fn main() {
             asteroid::set_asteroid_movement_and_rotation,
             asteroid::set_asteroid_position_after_border_outbounds,
             collision::detect_asteroid_collision
-        ))
-        .run();
+        ).run_if(in_state(PausingState::Running)
+        )).run();
 }
 
 fn setup(
@@ -107,7 +115,7 @@ fn set_game_hero_ship(
     ))
     .insert(Name::new("Hero Ship"))
     .insert(RigidBody::Dynamic)
-    .insert(Collider::ball(5.5))
+    .insert(Collider::ball(5.))
     .insert(GravityScale(0.))
     .insert(CollisionGroups::new(Group::GROUP_10, Group::GROUP_1));
 }
@@ -140,4 +148,17 @@ fn set_fps_counter(
     let mut fps_counter_text: Mut<'_, Text> = fps_counter_text_query.single_mut();
     fps_counter_text.sections[0].style.font_size = 15.;
     fps_counter_state.enable();
+}
+
+fn check_for_pausing_by_keyboard(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    states: ResMut<State<PausingState>>,
+    mut next_state: ResMut<NextState<PausingState>>
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        match states.get() {
+            PausingState::Paused => next_state.set(PausingState::Running),
+            PausingState::Running => next_state.set(PausingState::Paused)
+        }
+    }
 }

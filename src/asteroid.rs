@@ -221,8 +221,8 @@ fn get_randomic_asteroid_onscreen_position(
         randomic_asteroid_position = thread_rng.gen_range(position_initial_range..=position_final_range);
 
         if
-            randomic_asteroid_position >= 20. ||
-            randomic_asteroid_position <= -20.
+            randomic_asteroid_position >= 50. ||
+            randomic_asteroid_position <= -50.
         {
             is_randomic_position_ok = true;
         }
