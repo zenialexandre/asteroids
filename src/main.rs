@@ -104,7 +104,12 @@ fn set_game_hero_ship(
             ..default()
         },
         hero_ship::HeroShip::default(),
-    ));
+    ))
+    .insert(Name::new("Hero Ship"))
+    .insert(RigidBody::Dynamic)
+    .insert(Collider::ball(5.5))
+    .insert(GravityScale(0.))
+    .insert(CollisionGroups::new(Group::GROUP_10, Group::GROUP_1));
 }
 
 fn set_game_window_icon(
