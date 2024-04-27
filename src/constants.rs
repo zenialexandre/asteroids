@@ -43,3 +43,8 @@ pub mod asteroid_movement_values {
 pub mod projectile_movement_values {
     pub const PROJECTILE_MOVEMENT_SPEED: f32 = 200.;    
 }
+
+pub mod ui_values {
+    pub const TOP_TEXT_VAL_PX: f32 = 260. / 2. + 80.;
+    pub const RIGHT_TEXT_VAL_PX: f32 = 400. / 2. + 120.;
+}

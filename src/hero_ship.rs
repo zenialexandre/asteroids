@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use std::sync::Mutex;
 
 use crate::projectile::{self, Projectile};
@@ -52,6 +53,26 @@ impl Default for HeroShip {
 }
 
 lazy_static! { static ref HERO_SHIP_ROTATION_FACTOR: Mutex<f32> = Mutex::new(0.); }
+
+pub fn spawn_hero_ship(
+    mut commands: Commands,
+    asset_server: &Res<AssetServer>
+) {
+    let hero_ship_handle: Handle<Image> = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
+
+    commands.spawn((
+        SpriteBundle {
+            texture: hero_ship_handle,
+            ..default()
+        },
+        HeroShip::default(),
+    ))
+    .insert(Name::new("Hero Ship"))
+    .insert(RigidBody::Dynamic)
+    .insert(Collider::ball(5.))
+    .insert(GravityScale(0.))
+    .insert(CollisionGroups::new(Group::GROUP_10, Group::GROUP_1));
+}
 
 pub fn set_hero_ship_movement_and_rotation(
     time: Res<Time>,

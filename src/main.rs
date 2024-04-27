@@ -20,7 +20,6 @@ use bevy_fps_counter::{
 use bevy_rapier2d::prelude::*;
 use std::io::Cursor;
 use winit::window::Icon;
-use constants::image_handles::HERO_SHIP_HANDLE_IMAGE;
 
 #[macro_use]
 extern crate lazy_static;
@@ -61,12 +60,15 @@ fn main() {
         .init_state::<PausingState>()
         .init_resource::<projectile::ProjectileSpawnTimer>()
         .add_systems(Startup, setup)
-        .add_systems(PostStartup, set_fps_counter)
-        .add_systems(Update, check_for_pausing_by_keyboard)
+        .add_systems(PostStartup, (set_fps_counter, setup_main_entities))
+        .add_systems(Update, ui::spawn_start_screen.run_if(in_state(GameState::StartScreen)))
+        .add_systems(Update, check_for_start_by_keyboard.run_if(in_state(GameState::StartScreen)))
+        .add_systems(Update, check_for_pausing_by_keyboard.run_if(in_state(GameState::InGame)))
         .add_systems(FixedUpdate,
-            ui::spawn_pause_menu.run_if(in_state(PausingState::Paused))
+            ui::spawn_pause_menu.run_if(in_state(PausingState::Paused).and_then(in_state(GameState::InGame)))
         )
         .add_systems(FixedUpdate, (
+            ui::erase_start_screen,
             ui::erase_pause_menu,
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
@@ -76,20 +78,17 @@ fn main() {
             asteroid::set_asteroid_movement_and_rotation,
             asteroid::set_asteroid_position_after_border_outbounds,
             collision::detect_asteroid_collision
-        ).run_if(in_state(PausingState::Running)
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))
         )).run();
 }
 
 fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    commands: Commands,
     windows: NonSend<WinitWindows>,
     primary_window_query: Query<Entity, With<PrimaryWindow>>
 ) {
-    set_game_camera(commands.reborrow());
+    set_game_camera(commands);
     set_game_window_icon(windows, primary_window_query);
-    set_game_hero_ship(commands.reborrow(), &asset_server);
-    asteroid::spawn_initial_asteroids(commands, &asset_server);
 }
 
 fn set_game_camera(mut commands: Commands) {
@@ -98,26 +97,6 @@ fn set_game_camera(mut commands: Commands) {
         ..default()
     };
     commands.spawn(camera_2d_bundle);
-}
-
-fn set_game_hero_ship(
-    mut commands: Commands,
-    asset_server: &Res<AssetServer>
-) {
-    let hero_ship_handle: Handle<Image> = asset_server.load(HERO_SHIP_HANDLE_IMAGE);
-
-    commands.spawn((
-        SpriteBundle {
-            texture: hero_ship_handle,
-            ..default()
-        },
-        hero_ship::HeroShip::default(),
-    ))
-    .insert(Name::new("Hero Ship"))
-    .insert(RigidBody::Dynamic)
-    .insert(Collider::ball(5.))
-    .insert(GravityScale(0.))
-    .insert(CollisionGroups::new(Group::GROUP_10, Group::GROUP_1));
 }
 
 fn set_game_window_icon(
@@ -141,6 +120,14 @@ fn set_game_window_icon(
     };
 }
 
+fn setup_main_entities(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>
+) {
+    hero_ship::spawn_hero_ship(commands.reborrow(), &asset_server);
+    asteroid::spawn_initial_asteroids(commands.reborrow(), &asset_server);
+}
+
 fn set_fps_counter(
     mut fps_counter_state: ResMut<FpsCounter>,
     mut fps_counter_text_query: Query<&mut Text, With<FpsCounterText>>
@@ -148,6 +135,18 @@ fn set_fps_counter(
     let mut fps_counter_text: Mut<'_, Text> = fps_counter_text_query.single_mut();
     fps_counter_text.sections[0].style.font_size = 15.;
     fps_counter_state.enable();
+}
+
+fn check_for_start_by_keyboard(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    states: ResMut<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>
+) {
+    if keyboard_input.just_pressed(KeyCode::Enter) {
+        if states.get() == &GameState::StartScreen {
+            next_state.set(GameState::InGame);
+        }
+    }
 }
 
 fn check_for_pausing_by_keyboard(
