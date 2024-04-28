@@ -59,6 +59,9 @@ impl Projectile {
 #[derive(Resource)]
 pub struct ProjectileSpawnTimer(pub Timer);
 
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct ProjectileSpawnSound(pub Handle<AudioSource>);
+
 impl Default for ProjectileSpawnTimer {
     fn default() -> Self {
         return  Self(Timer::from_seconds(0.2, TimerMode::Repeating));

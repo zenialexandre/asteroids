@@ -7,13 +7,19 @@ use crate::{
     asteroid::{
         Asteroid,
         spawn_asteroids_after_collision
-    }
+    },
+    GameState
 };
+
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct AsteroidDestroyedSound(pub Handle<AudioSource>);
 
 pub fn detect_asteroid_collision(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut collision_events: EventReader<CollisionEvent>,
+    mut next_state: ResMut<NextState<GameState>>,
+    asteroid_destroyed_sound: Res<AsteroidDestroyedSound>,
     hero_ship_query: Query<(Entity, &HeroShip)>,
     projectile_query: Query<(Entity, &Projectile)>,
     asteroid_query: Query<(Entity, &Asteroid, &Transform)>
@@ -28,7 +34,7 @@ pub fn detect_asteroid_collision(
                         (asteroid_entity == first_entity || asteroid_entity == second_entity) &&
                         (hero_ship_entity == first_entity || hero_ship_entity == second_entity)
                     {
-                        commands.entity(hero_ship_entity).despawn();
+                        next_state.set(GameState::EndGame);
                     }
 
                     for (projectile_entity, _) in &projectile_query {
@@ -38,6 +44,12 @@ pub fn detect_asteroid_collision(
                         {
                             commands.entity(projectile_entity).despawn();
                             commands.entity(asteroid_entity).despawn();
+
+                            commands.spawn(AudioBundle {
+                                source: asteroid_destroyed_sound.clone(),
+                                settings: PlaybackSettings::DESPAWN
+                            });
+
                             spawn_asteroids_after_collision(
                                 commands.reborrow(),
                                 &asset_server,

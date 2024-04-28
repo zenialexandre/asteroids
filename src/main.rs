@@ -28,7 +28,8 @@ extern crate lazy_static;
 enum GameState {
     #[default]
     StartScreen,
-    InGame
+    InGame,
+    EndGame
 }
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
@@ -37,6 +38,9 @@ enum PausingState {
     #[default]
     Running
 }
+
+#[derive(Resource, Default, Deref, DerefMut)]
+struct BackgroundMusic(Handle<AudioSource>);
 
 fn main() {
     App::new()
@@ -59,16 +63,23 @@ fn main() {
         .init_state::<GameState>()
         .init_state::<PausingState>()
         .init_resource::<projectile::ProjectileSpawnTimer>()
+        .insert_resource(GlobalVolume::new(1.))
         .add_systems(Startup, setup)
         .add_systems(PostStartup, (set_fps_counter, setup_main_entities))
-        .add_systems(Update, ui::spawn_start_screen.run_if(in_state(GameState::StartScreen)))
+        .add_systems(Update, ui::spawn_start_screen_menu.run_if(in_state(GameState::StartScreen)))
+        .add_systems(Update, (
+            despawn_entities,
+            ui::spawn_end_game_menu
+        ).run_if(in_state(GameState::EndGame)))
         .add_systems(Update, check_for_starting_by_keyboard.run_if(in_state(GameState::StartScreen)))
         .add_systems(Update, check_for_pausing_by_keyboard.run_if(in_state(GameState::InGame)))
+        .add_systems(Update, check_for_restarting_by_keyboard.run_if(in_state(GameState::EndGame)))
         .add_systems(Update,
             ui::spawn_pause_menu.run_if(in_state(PausingState::Paused).and_then(in_state(GameState::InGame)))
         )
         .add_systems(Update, (
-            ui::erase_start_screen,
+            ui::erase_end_game_menu,
+            ui::erase_start_screen_menu,
             ui::erase_pause_menu
         ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))))
         .add_systems(FixedUpdate, (
@@ -85,12 +96,14 @@ fn main() {
 }
 
 fn setup(
-    commands: Commands,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
     windows: NonSend<WinitWindows>,
     primary_window_query: Query<Entity, With<PrimaryWindow>>
 ) {
-    set_game_camera(commands);
+    set_game_camera(commands.reborrow());
     set_game_window_icon(windows, primary_window_query);
+    set_game_sounds(commands.reborrow(), asset_server);
 }
 
 fn set_game_camera(mut commands: Commands) {
@@ -122,12 +135,47 @@ fn set_game_window_icon(
     };
 }
 
+fn set_game_sounds(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>
+) {
+    let background_music: Handle<AudioSource> =
+        asset_server.load("sounds/background_music.ogg");
+    commands.insert_resource(BackgroundMusic(background_music));
+
+    let hero_ship_launching_sound: Handle<AudioSource> =
+        asset_server.load("sounds/hero_ship_launching_sound.ogg");
+    commands.insert_resource(hero_ship::HeroShipLaunchingSound(hero_ship_launching_sound));
+
+    let projectile_spawn_sound: Handle<AudioSource> =
+        asset_server.load("sounds/projectile_spawn_sound.ogg");
+    commands.insert_resource(projectile::ProjectileSpawnSound(projectile_spawn_sound));
+
+    let asteroid_destroyed_sound: Handle<AudioSource> =
+        asset_server.load("sounds/asteroid_destroyed_sound.ogg");
+    commands.insert_resource(collision::AsteroidDestroyedSound(asteroid_destroyed_sound));
+}
+
 fn setup_main_entities(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
     hero_ship::spawn_hero_ship(commands.reborrow(), &asset_server);
     asteroid::spawn_initial_asteroids(commands.reborrow(), &asset_server);
+}
+
+fn despawn_entities(
+    mut commands: Commands,
+    hero_ship_query: Query<Entity, With<hero_ship::HeroShip>>,
+    asteroid_query: Query<Entity, With<asteroid::Asteroid>>
+) {
+    for hero_ship_entity in &hero_ship_query {
+        commands.entity(hero_ship_entity).despawn_recursive();
+    }
+
+    for asteroid_entity in &asteroid_query {
+      commands.entity(asteroid_entity).despawn_recursive();
+    }
 }
 
 fn set_fps_counter(
@@ -140,13 +188,36 @@ fn set_fps_counter(
 }
 
 fn check_for_starting_by_keyboard(
+    mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    background_music: Res<BackgroundMusic>,
     states: ResMut<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter) {
         if states.get() == &GameState::StartScreen {
             next_state.set(GameState::InGame);
+            commands.spawn(AudioBundle {
+                source: background_music.clone(),
+                settings: PlaybackSettings::LOOP
+            });
+        }
+    }
+}
+
+fn check_for_restarting_by_keyboard(
+    commands: Commands,
+    asset_server: Res<AssetServer>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    states: ResMut<State<GameState>>,
+    mut next_state_game_state: ResMut<NextState<GameState>>,
+    mut next_state_pausing_state: ResMut<NextState<PausingState>>
+) {
+    if keyboard_input.just_pressed(KeyCode::Enter) {
+        if states.get() == &GameState::EndGame {
+            setup_main_entities(commands, asset_server);
+            next_state_game_state.set(GameState::InGame);
+            next_state_pausing_state.set(PausingState::Running);
         }
     }
 }

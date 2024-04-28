@@ -52,6 +52,9 @@ impl Default for HeroShip {
     }
 }
 
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct HeroShipLaunchingSound(pub Handle<AudioSource>);
+
 lazy_static! { static ref HERO_SHIP_ROTATION_FACTOR: Mutex<f32> = Mutex::new(0.); }
 
 pub fn spawn_hero_ship(
@@ -75,8 +78,10 @@ pub fn spawn_hero_ship(
 }
 
 pub fn set_hero_ship_movement_and_rotation(
+    mut commands: Commands,
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    hero_ship_launching_sound: Res<HeroShipLaunchingSound>,
     mut hero_ship_query: Query<(&mut HeroShip, &mut Transform)>
 ) {
     let mut movement_direction: Vec3;
@@ -84,7 +89,7 @@ pub fn set_hero_ship_movement_and_rotation(
 
     for (mut hero_ship_entity, mut hero_ship_transform) in &mut hero_ship_query {
         set_hero_ship_rotation_factor(&keyboard_input, hero_ship_entity.reborrow());
-        increase_hero_ship_movement_speed(&keyboard_input, hero_ship_entity.reborrow());
+        increase_hero_ship_movement_speed(commands.reborrow(), &keyboard_input, &hero_ship_launching_sound, hero_ship_entity.reborrow());
         apply_brake_on_hero_ship_movement_speed(&time, &keyboard_input, hero_ship_entity.reborrow());
 
         hero_ship_transform.rotate_z(
@@ -125,7 +130,9 @@ fn set_hero_ship_rotation_factor(
 }
 
 fn increase_hero_ship_movement_speed(
+    mut commands: Commands,
     keyboard_input: &Res<ButtonInput<KeyCode>>,
+    hero_ship_launching_sound: &Res<HeroShipLaunchingSound>,
     mut hero_ship_entity: Mut<'_, HeroShip>
 ) {
     if 
@@ -135,6 +142,11 @@ fn increase_hero_ship_movement_speed(
         if hero_ship_entity.movement_speed < hero_ship_entity.movement_speed_maximum {
             hero_ship_entity.movement_speed += hero_ship_entity.movement_speed_incrementation;
         }
+
+        commands.spawn(AudioBundle {
+            source: hero_ship_launching_sound.0.clone(),
+            settings: PlaybackSettings::DESPAWN
+        });
     }
 }
 
@@ -229,11 +241,12 @@ pub fn set_hero_ship_position_after_border_outbounds(
 }
 
 pub fn hero_ship_fire_projectile(
-    commands: Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut projectile_spawn_timer: ResMut<projectile::ProjectileSpawnTimer>,
+    projectile_spawn_sound: Res<projectile::ProjectileSpawnSound>,
     hero_ship_query: Query<(&HeroShip, &Transform)>
 ) {
     if keyboard_input.pressed(KeyCode::Space) {
@@ -244,7 +257,11 @@ pub fn hero_ship_fire_projectile(
         if projectile_spawn_timer.0.just_finished() {
             projectile_entity.translation = hero_ship_transform.translation;
             projectile_entity.direction = hero_ship_transform.rotation * Vec3::Y;
-            Projectile::spawn_projectile(projectile_entity, commands, asset_server);
+            Projectile::spawn_projectile(projectile_entity, commands.reborrow(), asset_server);
+            commands.spawn(AudioBundle {
+                source: projectile_spawn_sound.clone(),
+                settings: PlaybackSettings::DESPAWN
+            });
         }
     }
 }
