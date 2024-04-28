@@ -39,7 +39,12 @@ use crate::constants::asteroid_movement_values::{
     BIG_ASTEROID_ROTATION_SPEED
 };
 
-use crate::constants::asteroid::INITIAL_BIG_ASTEROIDS_ONSCREEN;
+use crate::constants::asteroid::{
+    INITIAL_BIG_ASTEROIDS_ONSCREEN,
+    SMALL_ASTEROID_COLLIDER_BALL_SIZE,
+    MEDIUM_ASTEROID_COLLIDER_BALL_SIZE,
+    BIG_ASTEROID_COLLIDER_BALL_SIZE
+};
 
 #[derive(Debug)]
 enum BorderSide {
@@ -64,7 +69,7 @@ impl BorderSide {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
-enum AsteroidType {
+pub enum AsteroidType {
     Small,
     Medium,
     Big
@@ -73,6 +78,7 @@ enum AsteroidType {
 #[derive(Component, Clone, Debug)]
 pub struct Asteroid {
     asteroid_type: AsteroidType,
+    collider_ball_size: f32,
     pub handle_image: Option<Handle<Image>>,
     pub movement_speed: Option<f32>,
     pub movement_direction: Vec3,
@@ -86,6 +92,7 @@ impl Default for Asteroid {
 
         return Self {
             asteroid_type: AsteroidType::Big,
+            collider_ball_size: BIG_ASTEROID_COLLIDER_BALL_SIZE,
             handle_image: None,
             movement_speed: None,
             movement_direction: vec3(thread_rng.gen_range(-1.0..=1.0), thread_rng.gen_range(-1.0..=1.0), 0.),
@@ -105,18 +112,21 @@ impl Asteroid {
         match asteroid_type {
             AsteroidType::Small => {
                 asteroid_struct.asteroid_type = asteroid_type;
+                asteroid_struct.collider_ball_size = SMALL_ASTEROID_COLLIDER_BALL_SIZE;
                 asteroid_struct.handle_image = Some(asset_server.load(SMALL_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(SMALL_ASTEROID_MOVEMENT_SPEED);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(SMALL_ASTEROID_ROTATION_SPEED));
             },
             AsteroidType::Medium => {
                 asteroid_struct.asteroid_type = asteroid_type;
+                asteroid_struct.collider_ball_size = MEDIUM_ASTEROID_COLLIDER_BALL_SIZE;
                 asteroid_struct.handle_image = Some(asset_server.load(MEDIUM_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(MEDIUM_ASTEROID_MOVEMENT_SPEED);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(MEDIUM_ASTEROID_ROTATION_SPEED));
             },
             AsteroidType::Big => {
                 asteroid_struct.asteroid_type = asteroid_type;
+                asteroid_struct.collider_ball_size = BIG_ASTEROID_COLLIDER_BALL_SIZE;
                 asteroid_struct.handle_image = Some(asset_server.load(BIG_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(BIG_ASTEROID_MOVEMENT_SPEED);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(BIG_ASTEROID_ROTATION_SPEED));
@@ -130,37 +140,81 @@ pub fn spawn_initial_asteroids(
     mut commands: Commands,
     asset_server: &Res<AssetServer>
 ) {
-    let mut random_asteroid_position_x: f32;
-    let mut random_asteroid_position_y: f32;
-
     for _ in 1..=INITIAL_BIG_ASTEROIDS_ONSCREEN {
-        let asteroid_struct: Asteroid = Asteroid::initialize_asteroid_based_on_type(asset_server, AsteroidType::Big);
-        random_asteroid_position_x = get_randomic_asteroid_onscreen_position(LEFT_BORDER_POSITION, RIGHT_BORDER_POSITION);
-        random_asteroid_position_y = get_randomic_asteroid_onscreen_position(BOTTOM_BORDER_POSITION, TOP_BORDER_POSITION);
+        spawn_asteroids(
+            commands.reborrow(),
+            asset_server,
+            AsteroidType::Big,
+            get_randomic_asteroid_onscreen_position(LEFT_BORDER_POSITION, RIGHT_BORDER_POSITION),
+            get_randomic_asteroid_onscreen_position(BOTTOM_BORDER_POSITION, TOP_BORDER_POSITION)
+        );
+    }
+}
 
-        commands.spawn((
-            SpriteBundle {
-                texture: asteroid_struct.clone().handle_image.unwrap(),
-                transform: Transform {
-                    translation: vec3(
-                        random_asteroid_position_x,
-                        random_asteroid_position_y,
-                        0.
-                    ),
-                    ..default()
-                },
+pub fn spawn_asteroids_after_collision(
+    mut commands: Commands,
+    asset_server: &Res<AssetServer>,
+    asteroid: &Asteroid,
+    asteroid_transform: &Transform
+) {
+    match asteroid.asteroid_type {
+        AsteroidType::Big => {
+            for _ in 1..=3 {
+                spawn_asteroids(
+                    commands.reborrow(),
+                    asset_server,
+                    AsteroidType::Medium,
+                    asteroid_transform.translation.x,
+                    asteroid_transform.translation.y
+                );
+            }
+        },
+        AsteroidType::Medium => { 
+            for _ in 1..=5 {
+                spawn_asteroids(
+                    commands.reborrow(),
+                    asset_server,
+                    AsteroidType::Small,
+                    asteroid_transform.translation.x,
+                    asteroid_transform.translation.y
+                );
+            }
+        },
+        AsteroidType::Small => {}
+    }
+}
+
+pub fn spawn_asteroids(
+    mut commands: Commands,
+    asset_server: &Res<AssetServer>,
+    asteroid_type: AsteroidType,
+    position_x: f32,
+    position_y: f32
+) {
+    let asteroid_struct: Asteroid = Asteroid::initialize_asteroid_based_on_type(asset_server, asteroid_type);
+
+    commands.spawn((
+        SpriteBundle {
+            texture: asteroid_struct.clone().handle_image.unwrap(),
+            transform: Transform {
+                translation: vec3(
+                    position_x,
+                    position_y,
+                    0.
+                ),
                 ..default()
             },
-            asteroid_struct,
-        ))
-        .insert(Name::new("Asteroid"))
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::ball(70.))
-        .insert(GravityScale(0.))
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_10))
-        .insert(Dominance::group(10));
-    }
+            ..default()
+        },
+        asteroid_struct.clone(),
+    ))
+    .insert(Name::new("Asteroid"))
+    .insert(RigidBody::Dynamic)
+    .insert(Collider::ball(asteroid_struct.collider_ball_size))
+    .insert(GravityScale(0.))
+    .insert(ActiveEvents::COLLISION_EVENTS)
+    .insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_10))
+    .insert(Dominance::group(10));
 }
 
 pub fn set_asteroid_movement_and_rotation(
@@ -230,7 +284,9 @@ fn get_randomic_asteroid_onscreen_position(
     return randomic_asteroid_position;
 }
 
-fn get_randomic_asteroid_offscreen_position(thread_rng: ThreadRng) -> Vec3 {
+fn get_randomic_asteroid_offscreen_position(
+    thread_rng: ThreadRng
+) -> Vec3 {
     let randomic_offscreen_border_side: BorderSide = BorderSide::get_randomic_border_side(thread_rng.clone());
 
     match randomic_offscreen_border_side {
@@ -265,11 +321,15 @@ fn get_randomic_asteroid_offscreen_position(thread_rng: ThreadRng) -> Vec3 {
     }
 }
 
-fn get_randomic_asteroid_offscreen_x_position(mut thread_rng: ThreadRng) -> f32 {
+fn get_randomic_asteroid_offscreen_x_position(
+    mut thread_rng: ThreadRng
+) -> f32 {
     return thread_rng.gen_range(LEFT_BORDER_POSITION..=RIGHT_BORDER_POSITION);
 }
 
-fn get_randomic_asteroid_offscreen_y_position(mut thread_rng: ThreadRng) -> f32 {
+fn get_randomic_asteroid_offscreen_y_position(
+    mut thread_rng: ThreadRng
+) -> f32 {
     return thread_rng.gen_range(BOTTOM_BORDER_POSITION..=TOP_BORDER_POSITION);
 }
 

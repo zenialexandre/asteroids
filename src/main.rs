@@ -62,14 +62,16 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(PostStartup, (set_fps_counter, setup_main_entities))
         .add_systems(Update, ui::spawn_start_screen.run_if(in_state(GameState::StartScreen)))
-        .add_systems(Update, check_for_start_by_keyboard.run_if(in_state(GameState::StartScreen)))
+        .add_systems(Update, check_for_starting_by_keyboard.run_if(in_state(GameState::StartScreen)))
         .add_systems(Update, check_for_pausing_by_keyboard.run_if(in_state(GameState::InGame)))
-        .add_systems(FixedUpdate,
+        .add_systems(Update,
             ui::spawn_pause_menu.run_if(in_state(PausingState::Paused).and_then(in_state(GameState::InGame)))
         )
-        .add_systems(FixedUpdate, (
+        .add_systems(Update, (
             ui::erase_start_screen,
-            ui::erase_pause_menu,
+            ui::erase_pause_menu
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))))
+        .add_systems(FixedUpdate, (
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
             hero_ship::set_hero_ship_position_after_border_outbounds,
@@ -79,7 +81,7 @@ fn main() {
             asteroid::set_asteroid_position_after_border_outbounds,
             collision::detect_asteroid_collision
         ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))
-        )).run();
+    )).run();
 }
 
 fn setup(
@@ -137,7 +139,7 @@ fn set_fps_counter(
     fps_counter_state.enable();
 }
 
-fn check_for_start_by_keyboard(
+fn check_for_starting_by_keyboard(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     states: ResMut<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>

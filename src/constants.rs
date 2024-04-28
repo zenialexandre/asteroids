@@ -29,12 +29,15 @@ pub mod hero_ship_movement_values {
 
 pub mod asteroid {
     pub const INITIAL_BIG_ASTEROIDS_ONSCREEN: usize = 4;
+    pub const SMALL_ASTEROID_COLLIDER_BALL_SIZE: f32 = 5.5;
+    pub const MEDIUM_ASTEROID_COLLIDER_BALL_SIZE: f32 = 30.;
+    pub const BIG_ASTEROID_COLLIDER_BALL_SIZE: f32 = 70.;
 }
 
 pub mod asteroid_movement_values {
-    pub const SMALL_ASTEROID_MOVEMENT_SPEED: f32 = 320.;
+    pub const SMALL_ASTEROID_MOVEMENT_SPEED: f32 = 200.;
     pub const SMALL_ASTEROID_ROTATION_SPEED: f32 = 150.;
-    pub const MEDIUM_ASTEROID_MOVEMENT_SPEED: f32 = 160.;
+    pub const MEDIUM_ASTEROID_MOVEMENT_SPEED: f32 = 150.;
     pub const MEDIUM_ASTEROID_ROTATION_SPEED: f32 = 100.;
     pub const BIG_ASTEROID_MOVEMENT_SPEED: f32 = 80.;
     pub const BIG_ASTEROID_ROTATION_SPEED: f32 = 40.;
