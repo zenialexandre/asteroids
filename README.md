@@ -9,9 +9,9 @@ Asteroids arcade game made using the Bevy Game Engine. 🦀🕹️🚀☄️
 This game uses the keyboard for all actions.
 
 ### Game Flow
-- The Game Flow can be done using:<br>
--> Esc (Pauses the game).<br>
--> Enter (Initialize the game or restart the game after it ends).<br>
+- The Game Flow can be manipulated using:<br>
+-> Escape (Pauses the game).<br>
+-> Enter (Initializes the game or restarts the game after it ends).<br>
 
 ### Hero Ship
 - The Hero Ship can be moved using:<br>
