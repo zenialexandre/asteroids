@@ -284,6 +284,6 @@ pub fn dynamic_hero_ship_still_alive_check(
     hero_ship_still_alive_timer.0.tick(time.delta());
 
     if hero_ship_still_alive_timer.0.just_finished() {
-        scoreboard_score.score += 10;
+        scoreboard_score.score += 5;
     }
 }
