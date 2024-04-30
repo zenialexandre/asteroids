@@ -11,13 +11,13 @@ This game uses the keyboard for all actions.
 ### Hero Ship
 
 - The Hero Ship can be moved using:<br>
--> W / Arrow Up (Accelerate)<br>
--> S / Arrow Down (Brake)<br>
--> A / Arrow Left (Rotate to the left)<br>
--> D / Arrow Right (Rotate to the right)<br>
+-> W / Arrow Up (Accelerate).<br>
+-> S / Arrow Down (Brake).<br>
+-> A / Arrow Left (Rotate to the left).<br>
+-> D / Arrow Right (Rotate to the right).<br>
 
-- The Hero Ship can shoot using:
--> Space (Shoot)
+- The Hero Ship can shoot using:<br>
+-> Space (Shoot).<br>
 
 ## Scoreboard 💯
 
