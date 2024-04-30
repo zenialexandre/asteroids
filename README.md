@@ -8,8 +8,12 @@ Asteroids arcade game made using the Bevy Game Engine. 🦀🕹️🚀☄️
 ## Comands ⌨️🕹️
 This game uses the keyboard for all actions.
 
-### Hero Ship
+### Game Flow
+- The Game Flow can be done using:<br>
+-> Esc (Pauses the game).<br>
+-> Enter (Initialize the game or restart the game after it ends).<br>
 
+### Hero Ship
 - The Hero Ship can be moved using:<br>
 -> W / Arrow Up (Accelerate).<br>
 -> S / Arrow Down (Brake).<br>
@@ -20,9 +24,9 @@ This game uses the keyboard for all actions.
 -> Space (Shoot).<br>
 
 ## Scoreboard 💯
+There are some different ways to increase your points.
 
 ### Increasing the score
-
 - On destroyind asteroids:<br>
 -> Big asteroids rewards the player with 10 points.<br>
 -> Medium asteroids rewards the player with 30 points.<br>
