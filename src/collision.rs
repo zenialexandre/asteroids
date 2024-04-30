@@ -1,10 +1,19 @@
 use bevy::prelude::*;
 use bevy_rapier2d::pipeline::*;
 
-use crate::hero_ship::HeroShip;
+use bevy::audio::{
+    PlaybackMode::Despawn,
+    Volume
+};
+
 use crate::projectile::Projectile;
 use crate::ui::ScoreboardScore;
 use crate::GameState;
+
+use crate::hero_ship::{
+    HeroShip,
+    HeroShipDestroyedSound
+};
 
 use crate::asteroid::{
     Asteroid,
@@ -21,6 +30,7 @@ pub fn detect_asteroid_collision(
     mut collision_events: EventReader<CollisionEvent>,
     mut next_state: ResMut<NextState<GameState>>,
     mut scoreboard_score: ResMut<ScoreboardScore>,
+    hero_ship_destroyed_sound: Res<HeroShipDestroyedSound>,
     asteroid_destroyed_sound: Res<AsteroidDestroyedSound>,
     hero_ship_query: Query<(Entity, &HeroShip)>,
     projectile_query: Query<(Entity, &Projectile)>,
@@ -37,6 +47,15 @@ pub fn detect_asteroid_collision(
                         (hero_ship_entity == first_entity || hero_ship_entity == second_entity)
                     {
                         next_state.set(GameState::EndGame);
+
+                        commands.spawn(AudioBundle {
+                            source: hero_ship_destroyed_sound.clone(),
+                            settings: PlaybackSettings {
+                                mode: Despawn,
+                                volume: Volume::new(2.5),
+                                ..default()
+                            }
+                        });
                     }
 
                     for (projectile_entity, _) in &projectile_query {

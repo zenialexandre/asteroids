@@ -2,6 +2,11 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::sync::Mutex;
 
+use bevy::audio::{
+    PlaybackMode::Despawn,
+    Volume
+};
+
 use crate::projectile::{self, Projectile};
 use crate::ui::ScoreboardScore;
 
@@ -64,6 +69,9 @@ impl Default for HeroShipStillAliveTimer {
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct HeroShipLaunchingSound(pub Handle<AudioSource>);
+
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct HeroShipDestroyedSound(pub Handle<AudioSource>);
 
 lazy_static! { static ref HERO_SHIP_ROTATION_FACTOR: Mutex<f32> = Mutex::new(0.); }
 
@@ -155,7 +163,11 @@ fn increase_hero_ship_movement_speed(
 
         commands.spawn(AudioBundle {
             source: hero_ship_launching_sound.0.clone(),
-            settings: PlaybackSettings::DESPAWN
+            settings: PlaybackSettings {
+                mode: Despawn,
+                volume: Volume::new(0.25),
+                ..default()
+            }
         });
     }
 }
@@ -270,7 +282,11 @@ pub fn hero_ship_fire_projectile(
             Projectile::spawn_projectile(projectile_entity, commands.reborrow(), asset_server);
             commands.spawn(AudioBundle {
                 source: projectile_spawn_sound.clone(),
-                settings: PlaybackSettings::DESPAWN
+                settings: PlaybackSettings {
+                    mode: Despawn,
+                    volume: Volume::new(0.5),
+                    ..default()
+                }
             });
         }
     }

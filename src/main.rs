@@ -151,6 +151,10 @@ fn set_game_sounds(
         asset_server.load("sounds/hero_ship_launching_sound.ogg");
     commands.insert_resource(hero_ship::HeroShipLaunchingSound(hero_ship_launching_sound));
 
+    let hero_ship_destroyed_sound: Handle<AudioSource> =
+        asset_server.load("sounds/hero_ship_destroyed_sound.ogg");
+    commands.insert_resource(hero_ship::HeroShipDestroyedSound(hero_ship_destroyed_sound));
+
     let projectile_spawn_sound: Handle<AudioSource> =
         asset_server.load("sounds/projectile_spawn_sound.ogg");
     commands.insert_resource(projectile::ProjectileSpawnSound(projectile_spawn_sound));
