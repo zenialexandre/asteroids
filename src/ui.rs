@@ -14,6 +14,14 @@ pub struct PauseMenu;
 #[derive(Component)]
 pub struct EndGameMenu;
 
+#[derive(Component, Clone, Copy)]
+pub struct Scoreboard;
+
+#[derive(Resource, Clone, Copy)]
+pub struct ScoreboardScore {
+    pub score: usize
+}
+
 pub fn spawn_start_screen_menu(
     mut commands: Commands
 ) {
@@ -94,7 +102,7 @@ pub fn spawn_end_game_menu(
         .with_style(Style {
             position_type: PositionType::Absolute,
             top: Val::Px(TOP_TEXT_VAL_PX),
-            right: Val::Px(RIGHT_TEXT_VAL_PX - 220.),
+            right: Val::Px(RIGHT_TEXT_VAL_PX - 240.),
             ..default()
         }),
         EndGameMenu,
@@ -108,4 +116,42 @@ pub fn erase_end_game_menu(
     for start_screen_entity in &start_screen_query {
         commands.entity(start_screen_entity).despawn();
     }
+}
+
+pub fn spawn_scoreboard(
+    mut commands: Commands
+) {
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Score: ",
+                TextStyle {
+                    font_size: 30.,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font_size: 30.,
+                color: Color::GREEN,
+                ..default()
+            }),
+        ])
+        .with_text_justify(JustifyText::Center)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(3.),
+            right: Val::Px(360.),
+            ..default()
+        }),
+        Scoreboard
+    ));
+}
+
+pub fn update_scoreboard_score(
+    score: Res<ScoreboardScore>,
+    mut scoreboard_query: Query<&mut Text, With<Scoreboard>>
+) {
+    let mut scoreboard_text: Mut<Text> = scoreboard_query.single_mut();
+    scoreboard_text.sections[1].value = score.score.to_string();
 }

@@ -4,8 +4,10 @@ use bevy_rapier2d::pipeline::*;
 use crate::{
     hero_ship::HeroShip,
     projectile::Projectile,
+    ui::ScoreboardScore,
     asteroid::{
         Asteroid,
+        AsteroidType,
         spawn_asteroids_after_collision
     },
     GameState
@@ -19,6 +21,7 @@ pub fn detect_asteroid_collision(
     asset_server: Res<AssetServer>,
     mut collision_events: EventReader<CollisionEvent>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut scoreboard_score: ResMut<ScoreboardScore>,
     asteroid_destroyed_sound: Res<AsteroidDestroyedSound>,
     hero_ship_query: Query<(Entity, &HeroShip)>,
     projectile_query: Query<(Entity, &Projectile)>,
@@ -56,11 +59,27 @@ pub fn detect_asteroid_collision(
                                 asteroid_component,
                                 asteroid_transform
                             );
+
+                            increase_score_based_on_asteroid_type(
+                                asteroid_component,
+                                &mut scoreboard_score
+                            );
                         }
                     }
                 }
             },
             CollisionEvent::Stopped(_, _, _) => ()
         }
+    }
+}
+
+fn increase_score_based_on_asteroid_type(
+    asteroid_component: &Asteroid,
+    scoreboard_score: &mut ResMut<ScoreboardScore>
+) {
+    match asteroid_component.asteroid_type {
+        AsteroidType::Small => { scoreboard_score.score += 50; },
+        AsteroidType::Medium => { scoreboard_score.score += 30; },
+        AsteroidType::Big => { scoreboard_score.score += 10; }
     }
 }

@@ -63,9 +63,11 @@ fn main() {
         .init_state::<GameState>()
         .init_state::<PausingState>()
         .init_resource::<projectile::ProjectileSpawnTimer>()
-        .insert_resource(GlobalVolume::new(1.))
+        .insert_resource(GlobalVolume::new(0.50))
+        .insert_resource(ui::ScoreboardScore { score: 0 })
         .add_systems(Startup, setup)
-        .add_systems(PostStartup, (set_fps_counter, setup_main_entities))
+        .add_systems(PostStartup, (set_fps_counter, setup_main_entities, ui::spawn_scoreboard))
+        .add_systems(Update, ui::update_scoreboard_score)
         .add_systems(Update, ui::spawn_start_screen_menu.run_if(in_state(GameState::StartScreen)))
         .add_systems(Update, (
             despawn_entities,
@@ -211,10 +213,12 @@ fn check_for_restarting_by_keyboard(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     states: ResMut<State<GameState>>,
     mut next_state_game_state: ResMut<NextState<GameState>>,
-    mut next_state_pausing_state: ResMut<NextState<PausingState>>
+    mut next_state_pausing_state: ResMut<NextState<PausingState>>,
+    mut scoreboard_score: ResMut<ui::ScoreboardScore>
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter) {
         if states.get() == &GameState::EndGame {
+            scoreboard_score.score = 0;
             setup_main_entities(commands, asset_server);
             next_state_game_state.set(GameState::InGame);
             next_state_pausing_state.set(PausingState::Running);

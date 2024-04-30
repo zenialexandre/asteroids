@@ -80,7 +80,7 @@ pub enum AsteroidType {
 
 #[derive(Component, Clone, Debug)]
 pub struct Asteroid {
-    asteroid_type: AsteroidType,
+    pub asteroid_type: AsteroidType,
     collider_ball_size: f32,
     pub handle_image: Option<Handle<Image>>,
     pub movement_speed: Option<f32>,
