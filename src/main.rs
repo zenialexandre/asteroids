@@ -171,10 +171,15 @@ fn setup_main_entities(
 fn despawn_entities(
     mut commands: Commands,
     hero_ship_query: Query<Entity, With<hero_ship::HeroShip>>,
+    projectile_query: Query<Entity, With<projectile::Projectile>>,
     asteroid_query: Query<Entity, With<asteroid::Asteroid>>
 ) {
     for hero_ship_entity in &hero_ship_query {
         commands.entity(hero_ship_entity).despawn_recursive();
+    }
+
+    for projectile_entity in &projectile_query {
+        commands.entity(projectile_entity).despawn_recursive();
     }
 
     for asteroid_entity in &asteroid_query {

@@ -141,7 +141,7 @@ pub fn spawn_scoreboard(
         .with_style(Style {
             position_type: PositionType::Absolute,
             top: Val::Px(3.),
-            right: Val::Px(360.),
+            right: Val::Px(350.),
             ..default()
         }),
         Scoreboard

@@ -32,13 +32,10 @@ use crate::constants::borders::{
 
 use crate::constants::asteroid_movement_values::{
     SMALL_ASTEROID_MOVEMENT_SPEED,
-    SMALL_ASTEROID_MOVEMENT_SPEED_DRAG,
     SMALL_ASTEROID_ROTATION_SPEED,
     MEDIUM_ASTEROID_MOVEMENT_SPEED,
-    MEDIUM_ASTEROID_MOVEMENT_SPEED_DRAG,
     MEDIUM_ASTEROID_ROTATION_SPEED,
     BIG_ASTEROID_MOVEMENT_SPEED,
-    BIG_ASTEROID_MOVEMENT_SPEED_DRAG,
     BIG_ASTEROID_ROTATION_SPEED
 };
 
@@ -84,7 +81,6 @@ pub struct Asteroid {
     collider_ball_size: f32,
     pub handle_image: Option<Handle<Image>>,
     pub movement_speed: Option<f32>,
-    pub movement_speed_drag: Option<f32>,
     pub movement_direction: Vec3,
     pub rotation_speed: Option<f32>,
     pub rotation_direction: f32
@@ -99,7 +95,6 @@ impl Default for Asteroid {
             collider_ball_size: BIG_ASTEROID_COLLIDER_BALL_SIZE,
             handle_image: None,
             movement_speed: None,
-            movement_speed_drag: None,
             movement_direction: vec3(thread_rng.gen_range(-1.0..=1.0), thread_rng.gen_range(-1.0..=1.0), 0.),
             rotation_speed: None,
             rotation_direction: thread_rng.gen_range(-1.0..=1.0)
@@ -120,7 +115,6 @@ impl Asteroid {
                 asteroid_struct.collider_ball_size = SMALL_ASTEROID_COLLIDER_BALL_SIZE;
                 asteroid_struct.handle_image = Some(asset_server.load(SMALL_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(SMALL_ASTEROID_MOVEMENT_SPEED);
-                asteroid_struct.movement_speed_drag = Some(SMALL_ASTEROID_MOVEMENT_SPEED_DRAG);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(SMALL_ASTEROID_ROTATION_SPEED));
             },
             AsteroidType::Medium => {
@@ -128,7 +122,6 @@ impl Asteroid {
                 asteroid_struct.collider_ball_size = MEDIUM_ASTEROID_COLLIDER_BALL_SIZE;
                 asteroid_struct.handle_image = Some(asset_server.load(MEDIUM_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(MEDIUM_ASTEROID_MOVEMENT_SPEED);
-                asteroid_struct.movement_speed_drag = Some(MEDIUM_ASTEROID_MOVEMENT_SPEED_DRAG);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(MEDIUM_ASTEROID_ROTATION_SPEED));
             },
             AsteroidType::Big => {
@@ -136,7 +129,6 @@ impl Asteroid {
                 asteroid_struct.collider_ball_size = BIG_ASTEROID_COLLIDER_BALL_SIZE;
                 asteroid_struct.handle_image = Some(asset_server.load(BIG_ASTEROID_HANDLE_IMAGE));
                 asteroid_struct.movement_speed = Some(BIG_ASTEROID_MOVEMENT_SPEED);
-                asteroid_struct.movement_speed_drag = Some(BIG_ASTEROID_MOVEMENT_SPEED_DRAG);
                 asteroid_struct.rotation_speed = Some(f32::to_radians(BIG_ASTEROID_ROTATION_SPEED));
             }
         }
@@ -237,21 +229,7 @@ pub fn set_asteroid_movement_and_rotation(
         );
         movement_distance = asteroid.movement_speed.unwrap() * time.delta_seconds();
         asteroid_transform.translation += asteroid.movement_direction * movement_distance;
-
-        apply_drag_on_asteroid_movement_speed(
-            &time,
-            asteroid,
-            asteroid_transform
-        );
     }
-}
-
-fn apply_drag_on_asteroid_movement_speed(
-    time: &Res<Time>,
-    asteroid: &Asteroid,
-    mut asteroid_transform: Mut<'_, Transform>
-) {
-    asteroid_transform.translation -= asteroid.movement_speed_drag.unwrap() * time.delta_seconds();
 }
 
 pub fn set_asteroid_position_after_border_outbounds(
