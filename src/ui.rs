@@ -149,9 +149,9 @@ pub fn spawn_scoreboard(
 }
 
 pub fn update_scoreboard_score(
-    score: Res<ScoreboardScore>,
+    scoreboard_score: Res<ScoreboardScore>,
     mut scoreboard_query: Query<&mut Text, With<Scoreboard>>
 ) {
     let mut scoreboard_text: Mut<Text> = scoreboard_query.single_mut();
-    scoreboard_text.sections[1].value = score.score.to_string();
+    scoreboard_text.sections[1].value = scoreboard_score.score.to_string();
 }

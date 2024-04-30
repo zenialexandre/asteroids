@@ -62,6 +62,7 @@ fn main() {
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
         .init_state::<GameState>()
         .init_state::<PausingState>()
+        .init_resource::<hero_ship::HeroShipStillAliveTimer>()
         .init_resource::<projectile::ProjectileSpawnTimer>()
         .insert_resource(GlobalVolume::new(0.50))
         .insert_resource(ui::ScoreboardScore { score: 0 })
@@ -85,6 +86,7 @@ fn main() {
             ui::erase_pause_menu
         ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))))
         .add_systems(FixedUpdate, (
+            hero_ship::dynamic_hero_ship_still_alive_check,
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
             hero_ship::set_hero_ship_position_after_border_outbounds,

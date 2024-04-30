@@ -3,6 +3,7 @@ use bevy_rapier2d::prelude::*;
 use std::sync::Mutex;
 
 use crate::projectile::{self, Projectile};
+use crate::ui::ScoreboardScore;
 
 use crate::constants::image_handles::{
     HERO_SHIP_HANDLE_IMAGE,
@@ -49,6 +50,15 @@ impl Default for HeroShip {
             rotation_speed_incrementation: HERO_SHIP_INCREMENTAL_ROTATION_SPEED,
             rotation_speed_maximum: HERO_SHIP_MAX_ROTATION_SPEED
         };
+    }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct HeroShipStillAliveTimer(pub Timer);
+
+impl Default for HeroShipStillAliveTimer {
+    fn default() -> Self {
+        return Self(Timer::from_seconds(10., TimerMode::Repeating));
     }
 }
 
@@ -263,5 +273,17 @@ pub fn hero_ship_fire_projectile(
                 settings: PlaybackSettings::DESPAWN
             });
         }
+    }
+}
+
+pub fn dynamic_hero_ship_still_alive_check(
+    time: Res<Time>,
+    mut hero_ship_still_alive_timer: ResMut<HeroShipStillAliveTimer>,
+    mut scoreboard_score: ResMut<ScoreboardScore>
+) {
+    hero_ship_still_alive_timer.0.tick(time.delta());
+
+    if hero_ship_still_alive_timer.0.just_finished() {
+        scoreboard_score.score += 10;
     }
 }

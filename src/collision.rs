@@ -1,16 +1,15 @@
 use bevy::prelude::*;
 use bevy_rapier2d::pipeline::*;
 
-use crate::{
-    hero_ship::HeroShip,
-    projectile::Projectile,
-    ui::ScoreboardScore,
-    asteroid::{
-        Asteroid,
-        AsteroidType,
-        spawn_asteroids_after_collision
-    },
-    GameState
+use crate::hero_ship::HeroShip;
+use crate::projectile::Projectile;
+use crate::ui::ScoreboardScore;
+use crate::GameState;
+
+use crate::asteroid::{
+    Asteroid,
+    AsteroidType,
+    spawn_asteroids_after_collision
 };
 
 #[derive(Resource, Default, Deref, DerefMut)]
