@@ -20,7 +20,7 @@ pub mod borders {
 
 pub mod hero_ship_movement_values {
     pub const HERO_SHIP_MOVEMENT_SPEED_DRAG: f32 = 100.;
-    pub const HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED: f32 = 5.;
+    pub const HERO_SHIP_INCREMENTAL_MOVEMENT_SPEED: f32 = 3.;
     pub const HERO_SHIP_MAX_MOVEMENT_SPEED: f32 = 320.;
     pub const HERO_SHIP_ROTATION_SPEED_DRAG: f32 = 250.;
     pub const HERO_SHIP_INCREMENTAL_ROTATION_SPEED: f32 = 15.;
@@ -35,7 +35,7 @@ pub mod asteroid {
 }
 
 pub mod asteroid_movement_values {
-    pub const SMALL_ASTEROID_MOVEMENT_SPEED: f32 = 190.;
+    pub const SMALL_ASTEROID_MOVEMENT_SPEED: f32 = 175.;
     pub const SMALL_ASTEROID_ROTATION_SPEED: f32 = 150.;
     pub const MEDIUM_ASTEROID_MOVEMENT_SPEED: f32 = 145.;
     pub const MEDIUM_ASTEROID_ROTATION_SPEED: f32 = 100.;
