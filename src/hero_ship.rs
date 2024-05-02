@@ -68,6 +68,12 @@ pub struct HeroShipAnimationIndices {
 #[derive(Component, Deref, DerefMut)]
 pub struct HeroShipAnimationTimer(pub Timer);
 
+impl Default for HeroShipAnimationTimer {
+    fn default() -> Self {
+        return Self(Timer::from_seconds(0.1, TimerMode::Repeating));
+    }
+}
+
 #[derive(Resource, Deref, DerefMut)]
 pub struct HeroShipStillAliveTimer(pub Timer);
 
@@ -119,10 +125,8 @@ pub fn spawn_hero_ship_destroyed_spritesheet(
         None,
         None
     );
-    let texture_atlas_layout_handle: Handle<TextureAtlasLayout> =
-        texture_atlas_layouts.add(texture_atlas_layout);
-    let hero_ship_animation_indices: HeroShipAnimationIndices =
-        HeroShipAnimationIndices { first: 1, last: 6 };
+    let texture_atlas_layout_handle: Handle<TextureAtlasLayout> = texture_atlas_layouts.add(texture_atlas_layout);
+    let hero_ship_animation_indices: HeroShipAnimationIndices = HeroShipAnimationIndices { first: 1, last: 6 };
 
     commands.spawn((
         SpriteSheetBundle {
@@ -139,7 +143,7 @@ pub fn spawn_hero_ship_destroyed_spritesheet(
             ..default()
         },
         hero_ship_animation_indices,
-        HeroShipAnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+        HeroShipAnimationTimer::default()
     ));
 }
 
