@@ -1,10 +1,12 @@
-use bevy::prelude::*;
-use bevy_rapier2d::pipeline::*;
-
-use bevy::audio::{
-    PlaybackMode::Despawn,
-    Volume
+use bevy::{
+    prelude::*,
+    audio::{
+        PlaybackMode::Despawn,
+        Volume
+    }
 };
+
+use bevy_rapier2d::pipeline::*;
 
 use crate::projectile::Projectile;
 use crate::ui::ScoreboardScore;
@@ -12,34 +14,34 @@ use crate::GameState;
 
 use crate::hero_ship::{
     HeroShip,
-    HeroShipDestroyedSound
+    HeroShipDestroyedSound,
+    spawn_hero_ship_destroyed_spritesheet
 };
 
 use crate::asteroid::{
     Asteroid,
     AsteroidType,
+    AsteroidDestroyedSound,
     spawn_asteroids_after_collision
 };
-
-#[derive(Resource, Default, Deref, DerefMut)]
-pub struct AsteroidDestroyedSound(pub Handle<AudioSource>);
 
 pub fn detect_asteroid_collision(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut collision_events: EventReader<CollisionEvent>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut scoreboard_score: ResMut<ScoreboardScore>,
     hero_ship_destroyed_sound: Res<HeroShipDestroyedSound>,
     asteroid_destroyed_sound: Res<AsteroidDestroyedSound>,
-    hero_ship_query: Query<(Entity, &HeroShip)>,
+    hero_ship_query: Query<(Entity, &HeroShip, &Transform)>,
     projectile_query: Query<(Entity, &Projectile)>,
     asteroid_query: Query<(Entity, &Asteroid, &Transform)>
 ) {
     for collision_event in collision_events.read() {
         match *collision_event {
             CollisionEvent::Started(first_entity, second_entity, _) => {
-                let (hero_ship_entity, _) = hero_ship_query.single();
+                let (hero_ship_entity, _, hero_ship_transform) = hero_ship_query.single();
 
                 for (asteroid_entity, asteroid_component, asteroid_transform) in &asteroid_query {
                     if
@@ -47,6 +49,13 @@ pub fn detect_asteroid_collision(
                         (hero_ship_entity == first_entity || hero_ship_entity == second_entity)
                     {
                         next_state.set(GameState::EndGame);
+
+                        spawn_hero_ship_destroyed_spritesheet(
+                            commands.reborrow(),
+                            &asset_server,
+                            &mut texture_atlas_layouts,
+                            hero_ship_transform.translation
+                        );
 
                         commands.spawn(AudioBundle {
                             source: hero_ship_destroyed_sound.clone(),

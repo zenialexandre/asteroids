@@ -12,7 +12,8 @@ use crate::ui::ScoreboardScore;
 
 use crate::constants::image_handles::{
     HERO_SHIP_HANDLE_IMAGE,
-    HERO_SHIP_FIRE_HANDLE_IMAGE
+    HERO_SHIP_FIRE_HANDLE_IMAGE,
+    HERO_SHIP_DESTROYED_HANDLE_IMAGE
 };
 
 use crate::constants::hero_ship_movement_values::{
@@ -58,6 +59,15 @@ impl Default for HeroShip {
     }
 }
 
+#[derive(Component)]
+pub struct HeroShipAnimationIndices {
+    pub first: usize,
+    pub last: usize
+}
+
+#[derive(Component, Deref, DerefMut)]
+pub struct HeroShipAnimationTimer(pub Timer);
+
 #[derive(Resource, Deref, DerefMut)]
 pub struct HeroShipStillAliveTimer(pub Timer);
 
@@ -93,6 +103,70 @@ pub fn spawn_hero_ship(
     .insert(Collider::ball(5.))
     .insert(GravityScale(0.))
     .insert(CollisionGroups::new(Group::GROUP_10, Group::GROUP_1));
+}
+
+pub fn spawn_hero_ship_destroyed_spritesheet(
+    mut commands: Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
+    hero_ship_last_position: Vec3
+) {
+    let texture: Handle<Image> = asset_server.load(HERO_SHIP_DESTROYED_HANDLE_IMAGE);
+    let texture_atlas_layout: TextureAtlasLayout = TextureAtlasLayout::from_grid(
+        Vec2::new(24., 24.),
+        7,
+        1,
+        None,
+        None
+    );
+    let texture_atlas_layout_handle: Handle<TextureAtlasLayout> =
+        texture_atlas_layouts.add(texture_atlas_layout);
+    let hero_ship_animation_indices: HeroShipAnimationIndices =
+        HeroShipAnimationIndices { first: 1, last: 6 };
+
+    commands.spawn((
+        SpriteSheetBundle {
+            texture,
+            atlas: TextureAtlas {
+                layout: texture_atlas_layout_handle,
+                index: hero_ship_animation_indices.first
+            },
+            transform: Transform {
+                scale: Vec3::splat(1.),
+                translation: hero_ship_last_position,
+                ..default()
+            },
+            ..default()
+        },
+        hero_ship_animation_indices,
+        HeroShipAnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+    ));
+}
+
+pub fn animate_hero_ship_destroyed_spritesheet(
+    time: Res<Time>,
+    mut animation_query: Query<(&HeroShipAnimationIndices, &mut HeroShipAnimationTimer, &mut TextureAtlas)>
+) {
+    for (indices, mut timer, mut texture_atlas) in &mut animation_query {
+        timer.tick(time.delta());
+
+        if timer.just_finished() {
+            texture_atlas.index = if texture_atlas.index == indices.last {
+                continue
+            } else {
+                texture_atlas.index + 1
+            };
+        }
+    }
+}
+
+pub fn erase_hero_ship_destroyed_spritesheet(
+    mut commands: Commands,
+    hero_ship_destroyed_spritesheet_query: Query<Entity, With<HeroShipAnimationIndices>>
+) {
+    for hero_ship_destroyed_spritesheet_entity in &hero_ship_destroyed_spritesheet_query {
+        commands.entity(hero_ship_destroyed_spritesheet_entity).despawn_recursive();
+    }
 }
 
 pub fn set_hero_ship_movement_and_rotation(

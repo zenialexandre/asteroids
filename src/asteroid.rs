@@ -136,6 +136,9 @@ impl Asteroid {
     }
 }
 
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct AsteroidDestroyedSound(pub Handle<AudioSource>);
+
 pub fn spawn_initial_asteroids(
     mut commands: Commands,
     asset_server: &Res<AssetServer>

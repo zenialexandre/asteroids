@@ -7,7 +7,11 @@ mod ui;
 
 use bevy::{
     prelude::*,
-    window::{EnabledButtons, PrimaryWindow, WindowPosition},
+    window::{
+        EnabledButtons,
+        PrimaryWindow,
+        WindowPosition
+    },
     winit::WinitWindows
 };
 
@@ -72,6 +76,7 @@ fn main() {
         .add_systems(Update, ui::spawn_start_screen_menu.run_if(in_state(GameState::StartScreen)))
         .add_systems(Update, (
             despawn_entities,
+            hero_ship::animate_hero_ship_destroyed_spritesheet,
             ui::spawn_end_game_menu
         ).run_if(in_state(GameState::EndGame)))
         .add_systems(Update, check_for_starting_by_keyboard.run_if(in_state(GameState::StartScreen)))
@@ -86,6 +91,7 @@ fn main() {
             ui::erase_pause_menu
         ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))))
         .add_systems(FixedUpdate, (
+            hero_ship::erase_hero_ship_destroyed_spritesheet,
             hero_ship::dynamic_hero_ship_still_alive_check,
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
@@ -144,24 +150,24 @@ fn set_game_sounds(
     asset_server: Res<AssetServer>
 ) {
     let background_music: Handle<AudioSource> =
-        asset_server.load("sounds/background_music.ogg");
+        asset_server.load(constants::audio_source_handles::BACKGROUND_MUSIC_HANDLE_AUDIO_SOURCE);
     commands.insert_resource(BackgroundMusic(background_music));
 
     let hero_ship_launching_sound: Handle<AudioSource> =
-        asset_server.load("sounds/hero_ship_launching_sound.ogg");
+        asset_server.load(constants::audio_source_handles::HERO_SHIP_LAUNCHING_SOUND_HANDLE_AUDIO_SOURCE);
     commands.insert_resource(hero_ship::HeroShipLaunchingSound(hero_ship_launching_sound));
 
     let hero_ship_destroyed_sound: Handle<AudioSource> =
-        asset_server.load("sounds/hero_ship_destroyed_sound.ogg");
+        asset_server.load(constants::audio_source_handles::HERO_SHIP_DESTROYED_SOUND_HANDLE_AUDIO_SOURCE);
     commands.insert_resource(hero_ship::HeroShipDestroyedSound(hero_ship_destroyed_sound));
 
     let projectile_spawn_sound: Handle<AudioSource> =
-        asset_server.load("sounds/projectile_spawn_sound.ogg");
+        asset_server.load(constants::audio_source_handles::PROJECTILE_SPAWN_SOUND_HANDLE_AUDIO_SOURCE);
     commands.insert_resource(projectile::ProjectileSpawnSound(projectile_spawn_sound));
 
     let asteroid_destroyed_sound: Handle<AudioSource> =
-        asset_server.load("sounds/asteroid_destroyed_sound.ogg");
-    commands.insert_resource(collision::AsteroidDestroyedSound(asteroid_destroyed_sound));
+        asset_server.load(constants::audio_source_handles::ASTEROID_DESTROYED_SOUND_HANDLE_AUDIO_SOURCE);
+    commands.insert_resource(asteroid::AsteroidDestroyedSound(asteroid_destroyed_sound));
 }
 
 fn setup_main_entities(
@@ -187,7 +193,7 @@ fn despawn_entities(
     }
 
     for asteroid_entity in &asteroid_query {
-      commands.entity(asteroid_entity).despawn_recursive();
+        commands.entity(asteroid_entity).despawn_recursive();
     }
 }
 

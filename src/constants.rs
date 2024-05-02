@@ -1,10 +1,19 @@
 pub mod image_handles {
     pub const HERO_SHIP_HANDLE_IMAGE: &str = "textures/sprites/ships/asteroids_hero_ship_24x24.png";
     pub const HERO_SHIP_FIRE_HANDLE_IMAGE: &str = "textures/sprites/ships/asteroids_hero_ship_fire_24x24.png";
+    pub const HERO_SHIP_DESTROYED_HANDLE_IMAGE: &str = "textures/sprites/ships/asteroids_hero_ship_destroyed_24x24.png";
     pub const SMALL_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_small_asteroid_24x24.png";
     pub const MEDIUM_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_medium_asteroid_48x48.png";
     pub const BIG_ASTEROID_HANDLE_IMAGE: &str = "textures/sprites/asteroids/asteroids_big_asteroid_150x150.png";
     pub const PROJECTILE_HANDLE_IMAGE: &str = "textures/sprites/projectiles/ship_projectile_4x4.png";
+}
+
+pub mod audio_source_handles {
+    pub const BACKGROUND_MUSIC_HANDLE_AUDIO_SOURCE: &str = "sounds/background_music.ogg";
+    pub const HERO_SHIP_LAUNCHING_SOUND_HANDLE_AUDIO_SOURCE: &str = "sounds/hero_ship_launching_sound.ogg";
+    pub const HERO_SHIP_DESTROYED_SOUND_HANDLE_AUDIO_SOURCE: &str = "sounds/hero_ship_destroyed_sound.ogg";
+    pub const PROJECTILE_SPAWN_SOUND_HANDLE_AUDIO_SOURCE: &str = "sounds/projectile_spawn_sound.ogg";
+    pub const ASTEROID_DESTROYED_SOUND_HANDLE_AUDIO_SOURCE: &str = "sounds/asteroid_destroyed_sound.ogg";
 }
 
 pub mod borders {
