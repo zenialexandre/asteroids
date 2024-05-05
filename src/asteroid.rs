@@ -55,7 +55,9 @@ enum BorderSide {
 }
 
 impl BorderSide {
-    fn get_randomic_border_side(mut thread_rng: ThreadRng) -> Self {
+    fn get_randomic_border_side(
+        mut thread_rng: ThreadRng
+    ) -> Self {
         let randomic_border_side: u32 = thread_rng.gen_range(1..=4);
 
         match randomic_border_side {

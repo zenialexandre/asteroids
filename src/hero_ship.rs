@@ -83,7 +83,7 @@ pub struct HeroShipLivesSprite {
 }
 
 impl HeroShipLivesSprite {
-    fn initialize_on_setup(
+    fn initialize(
         asset_server: &Res<AssetServer>
     ) -> Self {
         return Self { handle_image: asset_server.load(HERO_SHIP_THREE_LIVES_HANDLE_IMAGE) };
@@ -153,13 +153,13 @@ pub fn spawn_hero_ship_lives(
     asset_server: &Res<AssetServer>
 ) {
     let hero_ship_lives_sprite: HeroShipLivesSprite =
-        HeroShipLivesSprite::initialize_on_setup(&asset_server);
+        HeroShipLivesSprite::initialize(&asset_server);
 
     commands.spawn((
         SpriteBundle {
             texture: hero_ship_lives_sprite.handle_image.clone_weak(),
             transform: Transform {
-                translation: Vec3::new(320., 235., 0.),
+                translation: Vec3::new(330., 235., 0.),
                 ..default()
             },
             ..default()
