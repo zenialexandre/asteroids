@@ -13,7 +13,10 @@ use crate::ui::ScoreboardScore;
 use crate::constants::image_handles::{
     HERO_SHIP_HANDLE_IMAGE,
     HERO_SHIP_FIRE_HANDLE_IMAGE,
-    HERO_SHIP_DESTROYED_HANDLE_IMAGE
+    HERO_SHIP_DESTROYED_HANDLE_IMAGE,
+    HERO_SHIP_THREE_LIVES_HANDLE_IMAGE,
+    HERO_SHIP_TWO_LIVES_HANDLE_IMAGE,
+    HERO_SHIP_ONE_LIVE_HANDLE_IMAGE
 };
 
 use crate::constants::hero_ship_movement_values::{
@@ -74,6 +77,39 @@ impl Default for HeroShipAnimationTimer {
     }
 }
 
+#[derive(Component, Clone)]
+pub struct HeroShipLivesSprite {
+    pub handle_image: Handle<Image>
+}
+
+impl HeroShipLivesSprite {
+    fn initialize_on_setup(
+        asset_server: &Res<AssetServer>
+    ) -> Self {
+        return Self { handle_image: asset_server.load(HERO_SHIP_THREE_LIVES_HANDLE_IMAGE) };
+    }
+}
+
+#[derive(Resource)]
+pub struct HeroShipRemainingLives {
+    pub lives_remaining: usize
+}
+
+impl Default for HeroShipRemainingLives {
+    fn default() -> Self {
+        return Self { lives_remaining: 3 };
+    }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct HeroShipRespawnTimer(pub Timer);
+
+impl Default for HeroShipRespawnTimer {
+    fn default() -> Self {
+        return Self(Timer::from_seconds(2., TimerMode::Repeating));
+    }
+}
+
 #[derive(Resource, Deref, DerefMut)]
 pub struct HeroShipStillAliveTimer(pub Timer);
 
@@ -100,6 +136,7 @@ pub fn spawn_hero_ship(
     commands.spawn((
         SpriteBundle {
             texture: hero_ship_handle,
+            visibility: Visibility::Visible,
             ..default()
         },
         HeroShip::default(),
@@ -109,6 +146,61 @@ pub fn spawn_hero_ship(
     .insert(Collider::ball(5.))
     .insert(GravityScale(0.))
     .insert(CollisionGroups::new(Group::GROUP_10, Group::GROUP_1));
+}
+
+pub fn spawn_hero_ship_lives(
+    mut commands: Commands,
+    asset_server: &Res<AssetServer>
+) {
+    let hero_ship_lives_sprite: HeroShipLivesSprite =
+        HeroShipLivesSprite::initialize_on_setup(&asset_server);
+
+    commands.spawn((
+        SpriteBundle {
+            texture: hero_ship_lives_sprite.handle_image.clone_weak(),
+            transform: Transform {
+                translation: Vec3::new(320., 235., 0.),
+                ..default()
+            },
+            ..default()
+        },
+        hero_ship_lives_sprite
+    ));
+}
+
+pub fn check_for_hero_ship_lives(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    hero_ship_remaining_lives: Res<HeroShipRemainingLives>,
+    mut hero_ship_lives_sprite_query: Query<(Entity, &HeroShipLivesSprite, &mut Handle<Image>)>
+) {
+    for (hero_ship_lives_sprite_entity, _, mut hero_ship_lives_sprite_handle_image) in &mut hero_ship_lives_sprite_query {
+        match hero_ship_remaining_lives.lives_remaining {
+            3 => { *hero_ship_lives_sprite_handle_image = asset_server.load(HERO_SHIP_THREE_LIVES_HANDLE_IMAGE); },
+            2 => { *hero_ship_lives_sprite_handle_image = asset_server.load(HERO_SHIP_TWO_LIVES_HANDLE_IMAGE); },
+            1 => { *hero_ship_lives_sprite_handle_image = asset_server.load(HERO_SHIP_ONE_LIVE_HANDLE_IMAGE); },
+            0 => { commands.entity(hero_ship_lives_sprite_entity).despawn_recursive(); },
+            _ => {}
+        }
+    }
+}
+
+pub fn respawn_hero_ship_on_demand(
+    time: Res<Time>,
+    mut hero_ship_respawn_timer: ResMut<HeroShipRespawnTimer>,
+    mut hero_ship_query: Query<(&HeroShip, &mut Transform, &mut Visibility, &mut CollisionGroups)>,
+) {
+    let (_, mut hero_ship_transform, mut hero_ship_visibility, mut hero_ship_collision_groups) = hero_ship_query.single_mut();
+
+    if *hero_ship_visibility == Visibility::Hidden {
+        hero_ship_respawn_timer.0.tick(time.delta());
+
+        if hero_ship_respawn_timer.just_finished() {
+            hero_ship_transform.translation = Vec3::new(0., 0., 0.);
+            *hero_ship_visibility = Visibility::Visible;
+            *hero_ship_collision_groups = CollisionGroups::new(Group::GROUP_10, Group::GROUP_1);
+        }
+    }
 }
 
 pub fn spawn_hero_ship_destroyed_spritesheet(
@@ -161,15 +253,6 @@ pub fn animate_hero_ship_destroyed_spritesheet(
                 texture_atlas.index + 1
             };
         }
-    }
-}
-
-pub fn erase_hero_ship_destroyed_spritesheet(
-    mut commands: Commands,
-    hero_ship_destroyed_spritesheet_query: Query<Entity, With<HeroShipAnimationIndices>>
-) {
-    for hero_ship_destroyed_spritesheet_entity in &hero_ship_destroyed_spritesheet_query {
-        commands.entity(hero_ship_destroyed_spritesheet_entity).despawn_recursive();
     }
 }
 
@@ -347,14 +430,14 @@ pub fn hero_ship_fire_projectile(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut projectile_spawn_timer: ResMut<projectile::ProjectileSpawnTimer>,
     projectile_spawn_sound: Res<projectile::ProjectileSpawnSound>,
-    hero_ship_query: Query<(&HeroShip, &Transform)>
+    hero_ship_query: Query<(&HeroShip, &Transform, &Visibility)>
 ) {
     if keyboard_input.pressed(KeyCode::Space) {
-        let (_, hero_ship_transform) = hero_ship_query.single();
+        let (_, hero_ship_transform, hero_ship_visibility) = hero_ship_query.single();
         let mut projectile_entity: Projectile = Projectile::default();
-        projectile_spawn_timer.0.tick(time.delta()); 
+        projectile_spawn_timer.0.tick(time.delta());
 
-        if projectile_spawn_timer.0.just_finished() {
+        if projectile_spawn_timer.0.just_finished() && hero_ship_visibility == &Visibility::Visible {
             projectile_entity.translation = hero_ship_transform.translation;
             projectile_entity.direction = hero_ship_transform.rotation * Vec3::Y;
             Projectile::spawn_projectile(projectile_entity, commands.reborrow(), asset_server);

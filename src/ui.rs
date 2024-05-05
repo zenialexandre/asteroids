@@ -22,6 +22,12 @@ pub struct ScoreboardScore {
     pub score: usize
 }
 
+impl Default for ScoreboardScore {
+    fn default() -> Self {
+        return Self { score: 0 };
+    }
+}
+
 pub fn spawn_start_screen_menu(
     mut commands: Commands
 ) {

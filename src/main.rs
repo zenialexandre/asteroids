@@ -66,33 +66,36 @@ fn main() {
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
         .init_state::<GameState>()
         .init_state::<PausingState>()
+        .init_resource::<hero_ship::HeroShipRemainingLives>()
+        .init_resource::<ui::ScoreboardScore>()
         .init_resource::<hero_ship::HeroShipStillAliveTimer>()
+        .init_resource::<hero_ship::HeroShipRespawnTimer>()
         .init_resource::<projectile::ProjectileSpawnTimer>()
         .insert_resource(GlobalVolume::new(0.50))
-        .insert_resource(ui::ScoreboardScore { score: 0 })
         .add_systems(Startup, setup)
         .add_systems(PostStartup, (set_fps_counter, setup_main_entities, ui::spawn_scoreboard))
-        .add_systems(Update, ui::update_scoreboard_score)
+        .add_systems(Update, (hero_ship::check_for_hero_ship_lives, ui::update_scoreboard_score))
         .add_systems(Update, ui::spawn_start_screen_menu.run_if(in_state(GameState::StartScreen)))
         .add_systems(Update, (
             despawn_entities,
             hero_ship::animate_hero_ship_destroyed_spritesheet,
-            ui::spawn_end_game_menu
+            ui::spawn_end_game_menu,
+            check_for_restarting_by_keyboard,
         ).run_if(in_state(GameState::EndGame)))
         .add_systems(Update, check_for_starting_by_keyboard.run_if(in_state(GameState::StartScreen)))
         .add_systems(Update, check_for_pausing_by_keyboard.run_if(in_state(GameState::InGame)))
-        .add_systems(Update, check_for_restarting_by_keyboard.run_if(in_state(GameState::EndGame)))
         .add_systems(Update,
             ui::spawn_pause_menu.run_if(in_state(PausingState::Paused).and_then(in_state(GameState::InGame)))
         )
         .add_systems(Update, (
             ui::erase_end_game_menu,
             ui::erase_start_screen_menu,
-            ui::erase_pause_menu
+            ui::erase_pause_menu,
+            hero_ship::animate_hero_ship_destroyed_spritesheet
         ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))))
         .add_systems(FixedUpdate, (
-            hero_ship::erase_hero_ship_destroyed_spritesheet,
             hero_ship::dynamic_hero_ship_still_alive_check,
+            hero_ship::respawn_hero_ship_on_demand,
             hero_ship::set_hero_ship_movement_and_rotation,
             hero_ship::draw_hero_ship_fire,
             hero_ship::set_hero_ship_position_after_border_outbounds,
@@ -100,7 +103,8 @@ fn main() {
             projectile::set_projectile_movement,
             asteroid::set_asteroid_movement_and_rotation,
             asteroid::set_asteroid_position_after_border_outbounds,
-            collision::detect_asteroid_collision
+            collision::detect_asteroid_projectile_collision,
+            collision::detect_asteroid_hero_ship_collision
         ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))
     )).run();
 }
@@ -113,7 +117,8 @@ fn setup(
 ) {
     set_game_camera(commands.reborrow());
     set_game_window_icon(windows, primary_window_query);
-    set_game_sounds(commands.reborrow(), asset_server);
+    set_game_sounds(commands.reborrow(), &asset_server);
+    hero_ship::spawn_hero_ship_lives(commands.reborrow(), &asset_server);
 }
 
 fn set_game_camera(mut commands: Commands) {
@@ -147,7 +152,7 @@ fn set_game_window_icon(
 
 fn set_game_sounds(
     mut commands: Commands,
-    asset_server: Res<AssetServer>
+    asset_server: &Res<AssetServer>
 ) {
     let background_music: Handle<AudioSource> =
         asset_server.load(constants::audio_source_handles::BACKGROUND_MUSIC_HANDLE_AUDIO_SOURCE);
@@ -225,17 +230,20 @@ fn check_for_starting_by_keyboard(
 }
 
 fn check_for_restarting_by_keyboard(
-    commands: Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     states: ResMut<State<GameState>>,
     mut next_state_game_state: ResMut<NextState<GameState>>,
     mut next_state_pausing_state: ResMut<NextState<PausingState>>,
+    mut hero_ship_remaining_lives: ResMut<hero_ship::HeroShipRemainingLives>,
     mut scoreboard_score: ResMut<ui::ScoreboardScore>
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter) {
         if states.get() == &GameState::EndGame {
+            hero_ship_remaining_lives.lives_remaining = 3;
             scoreboard_score.score = 0;
+            hero_ship::spawn_hero_ship_lives(commands.reborrow(), &asset_server);
             setup_main_entities(commands, asset_server);
             next_state_game_state.set(GameState::InGame);
             next_state_pausing_state.set(PausingState::Running);
