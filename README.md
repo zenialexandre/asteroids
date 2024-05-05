@@ -1,7 +1,7 @@
 # asteroids
 Asteroids arcade game made using the Bevy Game Engine. 🦀🕹️🚀☄️
 
-![image](https://github.com/zenialexandre/asteroids/assets/84157233/76de6a99-0eb2-44e8-86fb-03b84c21a115)
+![image](https://github.com/zenialexandre/asteroids/assets/84157233/11f1c560-2819-4903-b1fd-a27aba40d33b)
 
 --------------------------
 
