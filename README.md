@@ -5,7 +5,7 @@ Asteroids arcade game made using the Bevy Game Engine. 🦀🕹️🚀☄️
 
 --------------------------
 
-## Comands ⌨️🕹️
+## Commands ⌨️🕹️
 This game uses the keyboard for all actions.
 
 ### Game Flow
