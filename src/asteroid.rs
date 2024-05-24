@@ -13,6 +13,9 @@ use bevy_rapier2d::{
     geometry::Collider
 };
 
+use crate::PausingState;
+use crate::GameState;
+
 use crate::constants::image_handles::{
     SMALL_ASTEROID_HANDLE_IMAGE,
     MEDIUM_ASTEROID_HANDLE_IMAGE,
@@ -45,6 +48,20 @@ use crate::constants::asteroid::{
     MEDIUM_ASTEROID_COLLIDER_BALL_SIZE,
     BIG_ASTEROID_COLLIDER_BALL_SIZE
 };
+
+pub struct AsteroidPlugin;
+
+impl Plugin for AsteroidPlugin {
+    fn build(
+        &self,
+        app: &mut App
+    ) {
+        app.add_systems(FixedUpdate, (
+            set_asteroid_movement_and_rotation,
+            set_asteroid_position_after_border_outbounds
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
+    }
+}
 
 #[derive(Debug)]
 enum BorderSide {

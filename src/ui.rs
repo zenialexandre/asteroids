@@ -1,9 +1,39 @@
 use bevy::prelude::*;
 
+use crate::PausingState;
+use crate::GameState;
+
 use crate::constants::ui_values::{
     TOP_TEXT_VAL_PX,
     RIGHT_TEXT_VAL_PX
 };
+
+pub struct UiPlugin;
+
+impl Plugin for UiPlugin {
+    fn build(
+        &self,
+        app: &mut App
+    ) {
+        app.init_resource::<ScoreboardScore>();
+        app.add_systems(PostStartup, spawn_scoreboard);
+        app.add_systems(Update, update_scoreboard_score);
+        app.add_systems(Update, (
+            spawn_end_game_menu
+        ).run_if(in_state(GameState::EndGame)));
+        app.add_systems(Update, (
+            spawn_start_screen_menu
+        ).run_if(in_state(GameState::StartScreen)));
+        app.add_systems(Update, (
+            spawn_pause_menu
+        ).run_if(in_state(PausingState::Paused).and_then(in_state(GameState::InGame))));
+        app.add_systems(Update, (
+            erase_end_game_menu,
+            erase_start_screen_menu,
+            erase_pause_menu
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
+    }
+}
 
 #[derive(Component)]
 pub struct StartScreenMenu;

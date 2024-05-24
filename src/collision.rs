@@ -10,6 +10,7 @@ use bevy_rapier2d::prelude::*;
 
 use crate::projectile::Projectile;
 use crate::ui::ScoreboardScore;
+use crate::PausingState;
 use crate::GameState;
 
 use crate::hero_ship::{
@@ -25,6 +26,20 @@ use crate::asteroid::{
     AsteroidDestroyedSound,
     spawn_asteroids_after_collision
 };
+
+pub struct CollisionPlugin;
+
+impl Plugin for CollisionPlugin {
+    fn build(
+        &self,
+        app: &mut App
+    ) {
+        app.add_systems(FixedUpdate, (
+            detect_asteroid_projectile_collision,
+            detect_asteroid_hero_ship_collision
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
+    }
+}
 
 pub fn detect_asteroid_projectile_collision(
     mut commands: Commands,

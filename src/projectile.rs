@@ -8,8 +8,24 @@ use bevy_rapier2d::{
     geometry::Collider
 };
 
+use crate::PausingState;
+use crate::GameState;
 use crate::constants::image_handles::PROJECTILE_HANDLE_IMAGE;
 use crate::constants::projectile_movement_values::PROJECTILE_MOVEMENT_SPEED;
+
+pub struct ProjectilePlugin;
+
+impl Plugin for ProjectilePlugin {
+    fn build(
+        &self,
+        app: &mut App
+    ) {
+        app.init_resource::<ProjectileSpawnTimer>();
+        app.add_systems(FixedUpdate, (
+            set_projectile_movement
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
+    }
+}
 
 #[derive(Component, Debug)]
 pub struct Projectile {

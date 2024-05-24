@@ -7,6 +7,8 @@ use bevy::audio::{
     Volume
 };
 
+use crate::PausingState;
+use crate::GameState;
 use crate::projectile::{self, Projectile};
 use crate::ui::ScoreboardScore;
 
@@ -34,6 +36,34 @@ use crate::constants::borders::{
     TOP_BORDER_POSITION,
     BOTTOM_BORDER_POSITION
 };
+
+pub struct HeroShipPlugin;
+
+impl Plugin for HeroShipPlugin {
+    fn build(
+        &self,
+        app: &mut App
+    ) {
+        app.init_resource::<HeroShipRemainingLives>();
+        app.init_resource::<HeroShipStillAliveTimer>();
+        app.init_resource::<HeroShipRespawnTimer>();
+        app.add_systems(Update, check_for_hero_ship_lives);
+        app.add_systems(Update, (
+            animate_hero_ship_destroyed_spritesheet
+        ).run_if(in_state(GameState::EndGame)));
+        app.add_systems(Update, (
+            animate_hero_ship_destroyed_spritesheet
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
+        app.add_systems(FixedUpdate, (
+            dynamic_hero_ship_still_alive_check,
+            respawn_hero_ship_on_demand,
+            set_hero_ship_movement_and_rotation,
+            draw_hero_ship_fire,
+            set_hero_ship_position_after_border_outbounds,
+            hero_ship_fire_projectile
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
+    }
+}
 
 #[derive(Component)]
 pub struct HeroShip {

@@ -64,49 +64,23 @@ fn main() {
         )
         .add_plugins(FpsCounterPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
+        .add_plugins(ui::UiPlugin)
+        .add_plugins(hero_ship::HeroShipPlugin)
+        .add_plugins(asteroid::AsteroidPlugin)
+        .add_plugins(projectile::ProjectilePlugin)
+        .add_plugins(collision::CollisionPlugin)
         .init_state::<GameState>()
         .init_state::<PausingState>()
-        .init_resource::<hero_ship::HeroShipRemainingLives>()
-        .init_resource::<ui::ScoreboardScore>()
-        .init_resource::<hero_ship::HeroShipStillAliveTimer>()
-        .init_resource::<hero_ship::HeroShipRespawnTimer>()
-        .init_resource::<projectile::ProjectileSpawnTimer>()
         .insert_resource(GlobalVolume::new(0.50))
         .add_systems(Startup, setup)
-        .add_systems(PostStartup, (set_fps_counter, setup_main_entities, ui::spawn_scoreboard))
-        .add_systems(Update, (hero_ship::check_for_hero_ship_lives, ui::update_scoreboard_score))
-        .add_systems(Update, ui::spawn_start_screen_menu.run_if(in_state(GameState::StartScreen)))
+        .add_systems(PostStartup, (set_fps_counter, setup_main_entities))
         .add_systems(Update, (
             despawn_entities,
-            hero_ship::animate_hero_ship_destroyed_spritesheet,
-            ui::spawn_end_game_menu,
-            check_for_restarting_by_keyboard,
+            check_for_restarting_by_keyboard
         ).run_if(in_state(GameState::EndGame)))
         .add_systems(Update, check_for_starting_by_keyboard.run_if(in_state(GameState::StartScreen)))
-        .add_systems(Update, check_for_pausing_by_keyboard.run_if(in_state(GameState::InGame)))
-        .add_systems(Update,
-            ui::spawn_pause_menu.run_if(in_state(PausingState::Paused).and_then(in_state(GameState::InGame)))
-        )
-        .add_systems(Update, (
-            ui::erase_end_game_menu,
-            ui::erase_start_screen_menu,
-            ui::erase_pause_menu,
-            hero_ship::animate_hero_ship_destroyed_spritesheet
-        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))))
-        .add_systems(FixedUpdate, (
-            hero_ship::dynamic_hero_ship_still_alive_check,
-            hero_ship::respawn_hero_ship_on_demand,
-            hero_ship::set_hero_ship_movement_and_rotation,
-            hero_ship::draw_hero_ship_fire,
-            hero_ship::set_hero_ship_position_after_border_outbounds,
-            hero_ship::hero_ship_fire_projectile,
-            projectile::set_projectile_movement,
-            asteroid::set_asteroid_movement_and_rotation,
-            asteroid::set_asteroid_position_after_border_outbounds,
-            collision::detect_asteroid_projectile_collision,
-            collision::detect_asteroid_hero_ship_collision
-        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))
-    )).run();
+        .add_systems(Update, check_for_pausing_by_keyboard.run_if(in_state(GameState::InGame))
+    ).run();
 }
 
 fn setup(
