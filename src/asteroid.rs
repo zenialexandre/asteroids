@@ -56,6 +56,10 @@ impl Plugin for AsteroidPlugin {
         &self,
         app: &mut App
     ) {
+        app.init_resource::<AsteroidCheckForTypesTimer>();
+        app.add_systems(Update, (
+            maintain_game_loop
+        ).run_if(in_state(PausingState::Running).and_then(in_state(GameState::InGame))));
         app.add_systems(FixedUpdate, (
             set_asteroid_movement_and_rotation,
             set_asteroid_position_after_border_outbounds
@@ -158,6 +162,45 @@ impl Asteroid {
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct AsteroidDestroyedSound(pub Handle<AudioSource>);
 
+#[derive(Resource, Deref, DerefMut)]
+pub struct AsteroidCheckForTypesTimer(pub Timer);
+
+impl Default for AsteroidCheckForTypesTimer {
+    fn default() -> Self {
+        return Self(Timer::from_seconds(4.5, TimerMode::Repeating));
+    }
+}
+
+pub fn maintain_game_loop(
+    commands: Commands,
+    asset_server: Res<AssetServer>,
+    time: Res<Time>,
+    mut asteroid_check_for_types_timer: ResMut<AsteroidCheckForTypesTimer>,
+    asteroid_query: Query<&Asteroid>
+) {
+    let mut is_none_big_asteroid_onscreen: bool = false;
+    let mut asteroid_counter_onscreen: usize = 0;
+
+    for asteroid_component in &asteroid_query {
+        if asteroid_component.asteroid_type != AsteroidType::Big {
+            is_none_big_asteroid_onscreen = true;
+        }
+
+        if asteroid_component.asteroid_type == AsteroidType::Big {
+            is_none_big_asteroid_onscreen = false;
+        }
+        asteroid_counter_onscreen += 1;
+    }
+
+    if is_none_big_asteroid_onscreen && asteroid_counter_onscreen <= 8 {
+        asteroid_check_for_types_timer.0.tick(time.delta());
+
+        if asteroid_check_for_types_timer.0.just_finished() {
+            spawn_initial_asteroids(commands, &asset_server);
+        }
+    }
+}
+
 pub fn spawn_initial_asteroids(
     mut commands: Commands,
     asset_server: &Res<AssetServer>
@@ -192,7 +235,7 @@ pub fn spawn_asteroids_after_collision(
             }
         },
         AsteroidType::Medium => { 
-            for _ in 1..=5 {
+            for _ in 1..=2 {
                 spawn_asteroids(
                     commands.reborrow(),
                     asset_server,
